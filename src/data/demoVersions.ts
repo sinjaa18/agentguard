@@ -1,0 +1,40 @@
+import { AgentVersion } from "@/types/version";
+
+export const demoVersions: AgentVersion[] = [
+  {
+    id: "v1",
+    version: "1.0",
+    reliability: 71,
+    taskSuccess: 78,
+    toolSafety: 62,
+    promptInjection: 58,
+    hallucination: 74,
+    goalDrift: 70,
+    scenarios: 47,
+    failed: 14,
+  },
+  {
+    id: "v2",
+    version: "1.1",
+    reliability: 79,
+    taskSuccess: 84,
+    toolSafety: 71,
+    promptInjection: 69,
+    hallucination: 81,
+    goalDrift: 76,
+    scenarios: 47,
+    failed: 10,
+  },
+  {
+    id: "v3",
+    version: "1.2",
+    reliability: 87,
+    taskSuccess: 92,
+    toolSafety: 84,
+    promptInjection: 81,
+    hallucination: 89,
+    goalDrift: 86,
+    scenarios: 47,
+    failed: 4,
+  },
+];
