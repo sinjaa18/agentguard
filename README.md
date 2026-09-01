@@ -482,7 +482,7 @@ Goal Stability            92/100
 
 ### 📸 Dashboard
 
-![AgentGuard Dashboard](./screenshots/dashboard.png)
+![AgentGuard Dashboard](./screenshots/overview/dashborad.png)
 
 ---
 
@@ -565,7 +565,7 @@ REGRESSION
 
 ## Agent Configuration
 
-![Agent Configuration](./screenshots/agent.png)
+![Agent Configuration](./screenshots/agents.png)
 
 ## Scenario Generation
 
@@ -585,7 +585,7 @@ REGRESSION
 
 ## Reliability Dashboard
 
-![Dashboard](./screenshots/dashboard.png)
+![Dashboard](./screenshots/overview/dashborad.png)
 
 ## Reliability Report
 
