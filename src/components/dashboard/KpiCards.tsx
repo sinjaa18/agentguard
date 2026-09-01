@@ -6,63 +6,63 @@ import { auth } from "@/lib/firebase/client";
 import { getDashboardData } from "@/lib/dashboard/getDashboardData";
 
 export default function KpiCards({ agent }: { agent: AgentDocument }) {
-  const [data, setData] = useState<Awaited<
-    ReturnType<typeof getDashboardData>
-  > | null>(null);
+  const [data, setData] = useState<Awaited<ReturnType<typeof getDashboardData>> | null>(null);
 
   useEffect(() => {
     const load = async () => {
       const user = auth.currentUser;
-
-      if (!user) {
-        setData(null);
-        return;
-      }
-
+      if (!user) return;
       try {
-        const result = await getDashboardData(agent.id, user.uid);
-
-        setData(result);
-      } catch (error) {
-        console.error("Failed to load dashboard KPIs:", error);
-        setData(null);
-      }
+        setData(await getDashboardData(agent.id, user.uid));
+      } catch { setData(null); }
     };
-
     load();
   }, [agent.id]);
 
   if (!data) {
     return (
-      <div className="grid grid-cols-2 gap-4 xl:grid-cols-5">
-        {Array.from({ length: 5 }).map((_, index) => (
-          <div
-            key={index}
-            className="h-24 rounded-xl border border-zinc-800 bg-[#0d0d0d]"
-          />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
+        {[...Array(5)].map((_, i) => (
+          <div key={i} style={{ height: 88, background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: 12 }} />
         ))}
       </div>
     );
   }
 
   const cards = [
-    ["Evaluations", data.evaluations],
-    ["Scenarios", data.scenarios],
-    ["Failures", data.failures],
-    ["Critical Failures", data.criticalFailures],
-    ["Reliability", `${data.averageReliability}%`],
+    { label: "Evaluations",    value: data.evaluations,      sub: "total runs" },
+    { label: "Scenarios",      value: data.scenarios,         sub: "test cases" },
+    { label: "Failures",       value: data.failures,          sub: "detected",   warn: data.failures > 0 },
+    { label: "Critical",       value: data.criticalFailures,  sub: "high severity", danger: data.criticalFailures > 0 },
+    { label: "Reliability",    value: `${data.averageReliability}%`, sub: "avg score" },
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-4 xl:grid-cols-5">
-      {cards.map(([label, value]) => (
-        <div
-          key={label}
-          className="rounded-xl border border-zinc-800 bg-[#0d0d0d] p-4"
-        >
-          <p className="text-xs text-zinc-500">{label}</p>
-
-          <p className="mt-2 text-2xl font-semibold">{value}</p>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
+      {cards.map(({ label, value, sub, warn, danger }) => (
+        <div key={label} style={{
+          background: danger ? "rgba(244,63,94,0.04)" : "var(--bg-surface)",
+          border: `1px solid ${danger ? "var(--red-dim)" : warn ? "var(--border-mid)" : "var(--border)"}`,
+          borderRadius: 12,
+          padding: "16px 18px",
+          position: "relative",
+        }}>
+          {danger && (
+            <div style={{
+              position: "absolute", top: 0, left: 0, right: 0, height: 2,
+              background: "var(--red)", borderRadius: "12px 12px 0 0",
+            }} />
+          )}
+          <p style={{ fontSize: 11, color: "var(--text-muted)", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 8 }}>
+            {label}
+          </p>
+          <p style={{
+            fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 4,
+            color: danger ? "var(--red)" : warn ? "var(--yellow)" : "var(--text-primary)",
+          }}>
+            {value}
+          </p>
+          <p style={{ fontSize: 11, color: "var(--text-muted)" }}>{sub}</p>
         </div>
       ))}
     </div>

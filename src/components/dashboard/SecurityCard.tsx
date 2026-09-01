@@ -11,79 +11,80 @@ export default function SecurityCard({ agent }: { agent: AgentDocument }) {
   useEffect(() => {
     const load = async () => {
       const user = auth.currentUser;
-
-      if (!user) {
-        setSecurity(null);
-        return;
-      }
-
+      if (!user) return;
       try {
         const score = await getAgentScore(agent.id, user.uid);
-
         setSecurity(score.security);
-      } catch (error) {
-        console.error("Failed to calculate security score:", error);
-        setSecurity(null);
-      }
+      } catch { setSecurity(null); }
     };
-
     load();
   }, [agent.id]);
 
   if (security === null) {
     return (
-      <div className="rounded-xl border border-zinc-800 bg-[#0d0d0d] p-6">
-        <p className="text-sm text-zinc-500">Calculating security...</p>
+      <div style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: 14, padding: 24 }}>
+        <div style={{ height: 16, width: 120, background: "var(--bg-raised)", borderRadius: 6, marginBottom: 12 }} />
+        <div style={{ height: 48, width: 80, background: "var(--bg-raised)", borderRadius: 8 }} />
       </div>
     );
   }
 
   const critical = security < 70;
+  const segments = 20;
+  const filled = Math.round((security / 100) * segments);
 
   return (
-    <div
-      className={`rounded-xl border p-6 ${
-        critical
-          ? "border-red-900 bg-red-950/20"
-          : "border-zinc-800 bg-[#0d0d0d]"
-      }`}
-    >
-      <div className="flex items-start justify-between">
+    <div style={{
+      background: critical ? "rgba(244,63,94,0.04)" : "var(--bg-surface)",
+      border: `1px solid ${critical ? "var(--red-dim)" : "var(--border)"}`,
+      borderRadius: 14,
+      padding: 24,
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
         <div>
-          <p className="text-sm text-zinc-500">Security Score</p>
-
-          <p
-            className={`mt-2 text-4xl font-semibold ${
-              critical ? "text-red-400" : "text-white"
-            }`}
-          >
-            {security}
+          <p style={{ fontSize: 11, color: "var(--text-muted)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }}>
+            Security Score
           </p>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+            <span style={{
+              fontSize: 48, fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1,
+              color: critical ? "var(--red)" : "var(--green)",
+            }}>
+              {security}
+            </span>
+            <span style={{ fontSize: 14, color: "var(--text-muted)" }}>/100</span>
+          </div>
         </div>
 
-        <span
-          className={`rounded-full px-3 py-1 text-xs ${
-            critical
-              ? "bg-red-950 text-red-400"
-              : "bg-emerald-950 text-emerald-400"
-          }`}
-        >
-          {critical ? "Critical Risk" : "Security Healthy"}
+        <span style={{
+          padding: "4px 10px",
+          borderRadius: 999,
+          fontSize: 11, fontWeight: 600,
+          background: critical ? "var(--red-dim)" : "var(--green-dim)",
+          color: critical ? "var(--red)" : "var(--green)",
+          border: `1px solid ${critical ? "var(--red-dim)" : "var(--green-dim)"}`,
+          letterSpacing: "0.04em",
+        }}>
+          {critical ? "CRITICAL RISK" : "SECURE"}
         </span>
       </div>
 
-      <div className="mt-6">
-        <div className="flex justify-between text-xs">
-          <span className="text-zinc-500">Security posture</span>
-
-          <span>{security}%</span>
+      {/* Segmented bar */}
+      <div>
+        <div style={{ display: "flex", gap: 2, marginBottom: 8 }}>
+          {[...Array(segments)].map((_, i) => (
+            <div key={i} style={{
+              flex: 1, height: 6, borderRadius: 2,
+              background: i < filled
+                ? critical ? "var(--red)" : "var(--green)"
+                : "var(--bg-raised)",
+              transition: "background 0.3s",
+            }} />
+          ))}
         </div>
-
-        <div className="mt-2 h-2 rounded-full bg-zinc-800">
-          <div
-            className="h-full rounded-full bg-white"
-            style={{ width: `${security}%` }}
-          />
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Security posture</span>
+          <span style={{ fontSize: 11, color: critical ? "var(--red)" : "var(--green)", fontWeight: 600 }}>{security}%</span>
         </div>
       </div>
     </div>

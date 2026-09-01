@@ -49,18 +49,18 @@ export default function VersionsPage() {
 
   return (
     <ProtectedRoute>
-      <main className="min-h-screen bg-[#0a0a0a] text-white ml-64 p-8">
+      <main className="min-h-screen bg-[var(--bg-base)] text-white ml-60 p-8">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs text-zinc-500">VERSION COMPARISON</p>
+          <p className="text-xs text-[var(--text-muted)]">VERSION COMPARISON</p>
 
           <h1 className="mt-2 text-3xl font-semibold">Agent Versions</h1>
 
-          <p className="mt-2 text-sm text-zinc-500">
+          <p className="mt-2 text-sm text-[var(--text-muted)]">
             Compare evaluation performance across runs.
           </p>
 
           <div className="mt-6 max-w-md">
-            <p className="mb-2 text-xs text-zinc-500">SELECT AGENT</p>
+            <p className="mb-2 text-xs text-[var(--text-muted)]">SELECT AGENT</p>
 
             <AgentSelector
               value={agentId}
@@ -72,8 +72,8 @@ export default function VersionsPage() {
           </div>
 
           {!agent && (
-            <div className="mt-6 rounded-xl border border-dashed border-zinc-800 p-10 text-center">
-              <p className="text-sm text-zinc-500">
+            <div className="mt-6 rounded-xl border border-dashed border-[var(--border)] p-10 text-center">
+              <p className="text-sm text-[var(--text-muted)]">
                 Select an agent to compare its evaluation history.
               </p>
             </div>
@@ -82,12 +82,12 @@ export default function VersionsPage() {
           {agent && (
             <div className="mt-8">
               {loading ? (
-                <p className="text-sm text-zinc-500">
+                <p className="text-sm text-[var(--text-muted)]">
                   Loading evaluation history...
                 </p>
               ) : versions.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-zinc-800 p-10 text-center">
-                  <p className="text-sm text-zinc-500">
+                <div className="rounded-xl border border-dashed border-[var(--border)] p-10 text-center">
+                  <p className="text-sm text-[var(--text-muted)]">
                     No completed evaluations yet.
                   </p>
                 </div>
@@ -97,9 +97,9 @@ export default function VersionsPage() {
                     {versions.map((version, index) => (
                       <div
                         key={index}
-                        className="rounded-xl border border-zinc-800 bg-[#0d0d0d] p-5"
+                        className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-5"
                       >
-                        <p className="text-xs text-zinc-500">
+                        <p className="text-xs text-[var(--text-muted)]">
                           {version.version}
                         </p>
 
@@ -107,20 +107,20 @@ export default function VersionsPage() {
                           {version.reliability}
                         </p>
 
-                        <p className="mt-1 text-xs text-zinc-500">
+                        <p className="mt-1 text-xs text-[var(--text-muted)]">
                           Reliability
                         </p>
 
-                        <div className="mt-4 text-xs text-zinc-500">
+                        <div className="mt-4 text-xs text-[var(--text-muted)]">
                           {version.failed} failed / {version.total} scenarios
                         </div>
                       </div>
                     ))}
                   </div>
 
-                  <div className="mt-6 overflow-hidden rounded-xl border border-zinc-800 bg-[#0d0d0d]">
+                  <div className="mt-6 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-surface)]">
                     <table className="w-full text-sm">
-                      <thead className="border-b border-zinc-800 text-xs text-zinc-500">
+                      <thead className="border-b border-[var(--border)] text-xs text-[var(--text-muted)]">
                         <tr>
                           <th className="p-4 text-left">Run</th>
                           <th className="p-4 text-left">Reliability</th>

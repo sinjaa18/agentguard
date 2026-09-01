@@ -144,17 +144,17 @@ export default function ReportsPage() {
 
   return (
     <ProtectedRoute>
-      <main className="min-h-screen bg-[#0a0a0a] text-white ml-64 p-8">
+      <main className="min-h-screen bg-[var(--bg-base)] text-white ml-60 p-8">
         <div className="mx-auto max-w-6xl">
           <div className="flex items-start justify-between gap-6">
             <div>
-              <p className="text-xs text-zinc-500">RELIABILITY REPORT</p>
+              <p className="text-xs text-[var(--text-muted)]">RELIABILITY REPORT</p>
 
               <h1 className="mt-2 text-3xl font-semibold">
                 Agent Reliability Report
               </h1>
 
-              <p className="mt-2 text-sm text-zinc-500">
+              <p className="mt-2 text-sm text-[var(--text-muted)]">
                 Generate an engineering report from real evaluation data.
               </p>
             </div>
@@ -164,7 +164,7 @@ export default function ReportsPage() {
                 <button
                   onClick={regenerate}
                   disabled={loading}
-                  className="flex items-center gap-2 rounded-lg border border-zinc-800 px-4 py-2.5 text-sm disabled:opacity-40"
+                  className="flex items-center gap-2 rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm disabled:opacity-40"
                 >
                   <RefreshCw size={15} />
                   Regenerate
@@ -172,7 +172,7 @@ export default function ReportsPage() {
 
                 <button
                   onClick={exportJSON}
-                  className="flex items-center gap-2 rounded-lg border border-zinc-800 px-4 py-2.5 text-sm"
+                  className="flex items-center gap-2 rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm"
                 >
                   <FileJson size={15} />
                   Export JSON
@@ -190,7 +190,7 @@ export default function ReportsPage() {
           </div>
 
           <div className="mt-6 max-w-md">
-            <p className="mb-2 text-xs text-zinc-500">SELECT AGENT</p>
+            <p className="mb-2 text-xs text-[var(--text-muted)]">SELECT AGENT</p>
 
             <AgentSelector
               value={agentId}
@@ -202,24 +202,24 @@ export default function ReportsPage() {
           </div>
 
           {!agent && (
-            <div className="mt-6 rounded-xl border border-dashed border-zinc-800 bg-[#0d0d0d] p-10 text-center">
-              <p className="text-sm text-zinc-500">
+            <div className="mt-6 rounded-xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-10 text-center">
+              <p className="text-sm text-[var(--text-muted)]">
                 Select an agent to generate its reliability report.
               </p>
             </div>
           )}
 
           {agent && loading && (
-            <div className="mt-8 rounded-xl border border-zinc-800 bg-[#0d0d0d] p-10 text-center">
-              <p className="text-sm text-zinc-500">
+            <div className="mt-8 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-10 text-center">
+              <p className="text-sm text-[var(--text-muted)]">
                 Generating reliability report...
               </p>
             </div>
           )}
 
           {agent && !loading && !data && (
-            <div className="mt-8 rounded-xl border border-dashed border-zinc-800 bg-[#0d0d0d] p-10 text-center">
-              <p className="text-sm text-zinc-500">
+            <div className="mt-8 rounded-xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-10 text-center">
+              <p className="text-sm text-[var(--text-muted)]">
                 No report data available yet.
               </p>
 
@@ -240,8 +240,8 @@ function ReportContent({ data }: { data: ReportData }) {
   const { report, failures, scenarios, evaluations } = data;
 
   return (
-    <div className="mt-8 rounded-xl border border-zinc-800 bg-[#0d0d0d]">
-      <div className="border-b border-zinc-800 p-6">
+    <div className="mt-8 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)]">
+      <div className="border-b border-[var(--border)] p-6">
         <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
           <Info label="Agent" value={report.agentName} />
 
@@ -288,19 +288,19 @@ function ReportContent({ data }: { data: ReportData }) {
 
         <Section title="Failure Breakdown">
           {failures.length === 0 ? (
-            <p className="text-sm text-zinc-600">No failures detected.</p>
+            <p className="text-sm text-[var(--text-dim)]">No failures detected.</p>
           ) : (
             <div className="space-y-3">
               {failures.map((failure) => (
                 <div
                   key={failure.id}
-                  className="rounded-lg border border-zinc-800 p-4"
+                  className="rounded-lg border border-[var(--border)] p-4"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-medium">{failure.title}</p>
 
-                      <p className="mt-1 text-xs text-zinc-500">
+                      <p className="mt-1 text-xs text-[var(--text-muted)]">
                         {failure.category.replaceAll("_", " ")}
                         {" · "}
                         {failure.scenarioId}
@@ -340,11 +340,11 @@ function ReportContent({ data }: { data: ReportData }) {
 
         <Section title="Scenario Results">
           {scenarios.length === 0 ? (
-            <p className="text-sm text-zinc-600">No scenarios found.</p>
+            <p className="text-sm text-[var(--text-dim)]">No scenarios found.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="border-b border-zinc-800 text-xs text-zinc-500">
+                <thead className="border-b border-[var(--border)] text-xs text-[var(--text-muted)]">
                   <tr>
                     <th className="p-3 text-left">ID</th>
                     <th className="p-3 text-left">Scenario</th>
@@ -357,13 +357,13 @@ function ReportContent({ data }: { data: ReportData }) {
                 <tbody>
                   {scenarios.map((scenario) => (
                     <tr key={scenario.id} className="border-t border-zinc-900">
-                      <td className="p-3 font-mono text-xs text-zinc-500">
+                      <td className="p-3 font-mono text-xs text-[var(--text-muted)]">
                         {scenario.id}
                       </td>
 
                       <td className="p-3">{scenario.title}</td>
 
-                      <td className="p-3 text-xs text-zinc-500">
+                      <td className="p-3 text-xs text-[var(--text-muted)]">
                         {scenario.category.replaceAll("_", " ")}
                       </td>
 
@@ -375,7 +375,7 @@ function ReportContent({ data }: { data: ReportData }) {
                             ? "text-emerald-400"
                             : scenario.status === "FAILED"
                               ? "text-red-400"
-                              : "text-zinc-500"
+                              : "text-[var(--text-muted)]"
                         }`}
                       >
                         {scenario.status}
@@ -390,7 +390,7 @@ function ReportContent({ data }: { data: ReportData }) {
 
         <Section title="Evaluation History">
           {evaluations.length === 0 ? (
-            <p className="text-sm text-zinc-600">
+            <p className="text-sm text-[var(--text-dim)]">
               No completed evaluations yet.
             </p>
           ) : (
@@ -398,7 +398,7 @@ function ReportContent({ data }: { data: ReportData }) {
               {evaluations.map((evaluation) => (
                 <div
                   key={evaluation.id}
-                  className="grid grid-cols-2 gap-4 rounded-lg border border-zinc-800 p-4 md:grid-cols-5"
+                  className="grid grid-cols-2 gap-4 rounded-lg border border-[var(--border)] p-4 md:grid-cols-5"
                 >
                   <Info label="Evaluation" value={evaluation.id} />
 
@@ -420,7 +420,7 @@ function ReportContent({ data }: { data: ReportData }) {
             {report.recommendations.map((recommendation, index) => (
               <div
                 key={index}
-                className="rounded-lg border border-zinc-800 p-4 text-sm text-zinc-300"
+                className="rounded-lg border border-[var(--border)] p-4 text-sm text-zinc-300"
               >
                 {index + 1}. {recommendation}
               </div>
@@ -443,7 +443,7 @@ function Section({
     <section className="border-b border-zinc-900 py-6 last:border-0">
       <h2 className="text-sm font-medium">{title}</h2>
 
-      <div className="mt-4 text-sm text-zinc-400">{children}</div>
+      <div className="mt-4 text-sm text-[var(--text-secondary)]">{children}</div>
     </section>
   );
 }
@@ -451,7 +451,7 @@ function Section({
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-zinc-500">{label}</p>
+      <p className="text-xs text-[var(--text-muted)]">{label}</p>
 
       <p className="mt-1 truncate text-sm">{value}</p>
     </div>
@@ -468,8 +468,8 @@ function Metric({
   danger?: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-zinc-800 p-4">
-      <p className="text-xs text-zinc-500">{label}</p>
+    <div className="rounded-lg border border-[var(--border)] p-4">
+      <p className="text-xs text-[var(--text-muted)]">{label}</p>
 
       <p
         className={`mt-2 text-2xl font-semibold ${
@@ -492,8 +492,8 @@ function ScoreBox({
   danger?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-zinc-800 p-5">
-      <p className="text-xs text-zinc-500">{label}</p>
+    <div className="rounded-xl border border-[var(--border)] p-5">
+      <p className="text-xs text-[var(--text-muted)]">{label}</p>
 
       <p
         className={`mt-2 text-4xl font-semibold ${
@@ -501,7 +501,7 @@ function ScoreBox({
         }`}
       >
         {value}
-        <span className="ml-1 text-sm text-zinc-500">/ 100</span>
+        <span className="ml-1 text-sm text-[var(--text-muted)]">/ 100</span>
       </p>
     </div>
   );
@@ -515,7 +515,7 @@ function Severity({ severity }: { severity: string }) {
         ? "bg-orange-950 text-orange-400"
         : severity === "MEDIUM"
           ? "bg-yellow-950 text-yellow-400"
-          : "bg-zinc-900 text-zinc-400";
+          : "bg-zinc-900 text-[var(--text-secondary)]";
 
   return (
     <span className={`rounded-full px-2 py-1 text-xs ${style}`}>
@@ -527,7 +527,7 @@ function Severity({ severity }: { severity: string }) {
 function Field({ title, value }: { title: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-zinc-500">{title}</p>
+      <p className="text-xs text-[var(--text-muted)]">{title}</p>
 
       <p className="mt-2 text-sm leading-6 text-zinc-300">{value}</p>
     </div>

@@ -43,7 +43,7 @@ export default function AgentDetailsPage() {
   if (loading) {
     return (
       <ProtectedRoute>
-        <main className="min-h-screen bg-[#0a0a0a] text-white ml-64 p-8">
+        <main className="min-h-screen bg-[#0a0a0a] text-white ml-60 p-8">
           <p className="text-sm text-zinc-500">Loading agent...</p>
         </main>
       </ProtectedRoute>
@@ -53,7 +53,7 @@ export default function AgentDetailsPage() {
   if (!agent) {
     return (
       <ProtectedRoute>
-        <main className="min-h-screen bg-[#0a0a0a] text-white ml-64 p-8">
+        <main className="min-h-screen bg-[#0a0a0a] text-white ml-60 p-8">
           <div className="mx-auto max-w-5xl">
             <p className="text-sm text-red-400">Agent not found.</p>
 
@@ -71,7 +71,7 @@ export default function AgentDetailsPage() {
 
   return (
     <ProtectedRoute>
-      <main className="min-h-screen bg-[#0a0a0a] text-white ml-64 p-8">
+      <main className="min-h-screen bg-[#0a0a0a] text-white ml-60 p-8">
         <div className="mx-auto max-w-6xl">
           <Link
             href="/agents"

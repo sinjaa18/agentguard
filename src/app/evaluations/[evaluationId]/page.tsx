@@ -70,7 +70,7 @@ export default function EvaluationDetailsPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#0a0a0a] text-white ml-64 p-8">
+      <main className="min-h-screen bg-[#0a0a0a] text-white ml-60 p-8">
         <div className="mx-auto max-w-6xl">
           <p className="text-sm text-zinc-500">Loading evaluation...</p>
         </div>
@@ -83,7 +83,7 @@ export default function EvaluationDetailsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white ml-64 p-8">
+    <main className="min-h-screen bg-[#0a0a0a] text-white ml-60 p-8">
       <div className="mx-auto max-w-6xl">
         <Link
           href="/evaluations"

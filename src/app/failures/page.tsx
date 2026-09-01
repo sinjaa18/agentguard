@@ -60,20 +60,20 @@ export default function FailuresPage() {
 
   return (
     <ProtectedRoute>
-      <main className="min-h-screen bg-[#0a0a0a] text-white ml-64 p-8">
+      <main className="min-h-screen bg-[var(--bg-base)] text-white ml-60 p-8">
         <div className="mx-auto max-w-7xl">
           <div>
-            <p className="text-xs text-zinc-500">FAILURE ANALYSIS</p>
+            <p className="text-xs text-[var(--text-muted)]">FAILURE ANALYSIS</p>
 
             <h1 className="mt-2 text-3xl font-semibold">Detected Failures</h1>
 
-            <p className="mt-2 text-sm text-zinc-500">
+            <p className="mt-2 text-sm text-[var(--text-muted)]">
               Findings detected during real agent evaluations.
             </p>
           </div>
 
           <div className="mt-6 max-w-md">
-            <p className="mb-2 text-xs text-zinc-500">SELECT AGENT</p>
+            <p className="mb-2 text-xs text-[var(--text-muted)]">SELECT AGENT</p>
 
             <AgentSelector
               value={agentId}
@@ -86,8 +86,8 @@ export default function FailuresPage() {
           </div>
 
           {!agent && (
-            <div className="mt-6 rounded-xl border border-dashed border-zinc-800 bg-[#0d0d0d] p-10 text-center">
-              <p className="text-sm text-zinc-500">
+            <div className="mt-6 rounded-xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-10 text-center">
+              <p className="text-sm text-[var(--text-muted)]">
                 Select an agent to view its failures.
               </p>
             </div>
@@ -126,25 +126,25 @@ export default function FailuresPage() {
               <div className="mt-6 relative">
                 <Search
                   size={16}
-                  className="absolute left-3 top-3 text-zinc-600"
+                  className="absolute left-3 top-3 text-[var(--text-dim)]"
                 />
 
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search failures..."
-                  className="w-full rounded-lg border border-zinc-800 bg-[#0d0d0d] py-2.5 pl-10 pr-4 text-sm outline-none focus:border-zinc-600"
+                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] py-2.5 pl-10 pr-4 text-sm outline-none focus:border-zinc-600"
                 />
               </div>
 
-              <div className="mt-4 overflow-hidden rounded-xl border border-zinc-800 bg-[#0d0d0d]">
+              <div className="mt-4 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-surface)]">
                 {loading ? (
-                  <div className="p-10 text-center text-sm text-zinc-500">
+                  <div className="p-10 text-center text-sm text-[var(--text-muted)]">
                     Loading failures...
                   </div>
                 ) : filtered.length === 0 ? (
                   <div className="p-10 text-center">
-                    <p className="text-sm text-zinc-500">No failures found.</p>
+                    <p className="text-sm text-[var(--text-muted)]">No failures found.</p>
 
                     <p className="mt-2 text-xs text-zinc-700">
                       Run an evaluation to generate findings.
@@ -152,7 +152,7 @@ export default function FailuresPage() {
                   </div>
                 ) : (
                   <table className="w-full text-sm">
-                    <thead className="border-b border-zinc-800 bg-zinc-900 text-xs text-zinc-500">
+                    <thead className="border-b border-[var(--border)] bg-zinc-900 text-xs text-[var(--text-muted)]">
                       <tr>
                         <th className="p-4 text-left">Failure</th>
                         <th className="p-4 text-left">Severity</th>
@@ -180,7 +180,7 @@ export default function FailuresPage() {
                               <div>
                                 <p className="font-medium">{failure.title}</p>
 
-                                <p className="mt-1 font-mono text-xs text-zinc-600">
+                                <p className="mt-1 font-mono text-xs text-[var(--text-dim)]">
                                   {failure.id}
                                 </p>
                               </div>
@@ -191,11 +191,11 @@ export default function FailuresPage() {
                             <Severity severity={failure.severity} />
                           </td>
 
-                          <td className="p-4 text-xs text-zinc-400">
+                          <td className="p-4 text-xs text-[var(--text-secondary)]">
                             {failure.category.replaceAll("_", " ")}
                           </td>
 
-                          <td className="p-4 font-mono text-xs text-zinc-500">
+                          <td className="p-4 font-mono text-xs text-[var(--text-muted)]">
                             {failure.scenarioId}
                           </td>
                         </tr>
@@ -228,17 +228,17 @@ function FailureDetails({
 }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/70 p-6 backdrop-blur-sm">
-      <div className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-xl border border-zinc-800 bg-[#0d0d0d]">
-        <div className="flex items-center justify-between border-b border-zinc-800 p-6">
+      <div className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-surface)]">
+        <div className="flex items-center justify-between border-b border-[var(--border)] p-6">
           <div>
-            <p className="font-mono text-xs text-zinc-600">{failure.id}</p>
+            <p className="font-mono text-xs text-[var(--text-dim)]">{failure.id}</p>
 
             <h2 className="mt-1 text-xl font-semibold">{failure.title}</h2>
           </div>
 
           <button
             onClick={onClose}
-            className="text-sm text-zinc-500 hover:text-white"
+            className="text-sm text-[var(--text-muted)] hover:text-white"
           >
             Close
           </button>
@@ -248,7 +248,7 @@ function FailureDetails({
           <div className="flex gap-2">
             <Severity severity={failure.severity} />
 
-            <span className="rounded-full bg-zinc-900 px-2.5 py-1 text-xs text-zinc-400">
+            <span className="rounded-full bg-zinc-900 px-2.5 py-1 text-xs text-[var(--text-secondary)]">
               {failure.category.replaceAll("_", " ")}
             </span>
           </div>
@@ -278,7 +278,7 @@ function Severity({ severity }: { severity: string }) {
         ? "bg-orange-950 text-orange-400"
         : severity === "MEDIUM"
           ? "bg-yellow-950 text-yellow-400"
-          : "bg-zinc-900 text-zinc-400";
+          : "bg-zinc-900 text-[var(--text-secondary)]";
 
   return (
     <span className={`rounded-full px-2 py-1 text-xs ${style}`}>
@@ -290,7 +290,7 @@ function Severity({ severity }: { severity: string }) {
 function Field({ title, value }: { title: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-zinc-500">{title}</p>
+      <p className="text-xs text-[var(--text-muted)]">{title}</p>
 
       <p className="mt-2 text-sm leading-6 text-zinc-300">{value}</p>
     </div>
@@ -299,8 +299,8 @@ function Field({ title, value }: { title: string; value: string }) {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-[#0d0d0d] p-5">
-      <p className="text-xs text-zinc-500">{label}</p>
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+      <p className="text-xs text-[var(--text-muted)]">{label}</p>
 
       <p className="mt-2 text-2xl font-semibold">{value}</p>
     </div>

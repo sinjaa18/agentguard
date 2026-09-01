@@ -48,15 +48,15 @@ export default function AgentsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white ml-64 p-8">
+    <main className="min-h-screen bg-[var(--bg-base)] text-white ml-60 p-8">
       <div className="mx-auto max-w-7xl">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-xs text-zinc-500">AGENTS</p>
+            <p className="text-xs text-[var(--text-muted)]">AGENTS</p>
 
             <h1 className="mt-2 text-3xl font-semibold">Agents</h1>
 
-            <p className="mt-2 text-sm text-zinc-500">
+            <p className="mt-2 text-sm text-[var(--text-muted)]">
               Configure and evaluate your AI agents.
             </p>
           </div>
@@ -70,18 +70,18 @@ export default function AgentsPage() {
         </div>
 
         {loading && (
-          <div className="mt-8 rounded-xl border border-zinc-800 bg-[#0d0d0d] p-8 text-center">
-            <p className="text-sm text-zinc-500">Loading agents...</p>
+          <div className="mt-8 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-8 text-center">
+            <p className="text-sm text-[var(--text-muted)]">Loading agents...</p>
           </div>
         )}
 
         {!loading && agents.length === 0 && (
-          <div className="mt-8 rounded-xl border border-dashed border-zinc-800 bg-[#0d0d0d] p-12 text-center">
-            <Bot className="mx-auto text-zinc-600" size={32} />
+          <div className="mt-8 rounded-xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-12 text-center">
+            <Bot className="mx-auto text-[var(--text-dim)]" size={32} />
 
             <h2 className="mt-4 font-medium">No agents yet</h2>
 
-            <p className="mt-2 text-sm text-zinc-500">
+            <p className="mt-2 text-sm text-[var(--text-muted)]">
               Create your first AI agent to start testing.
             </p>
 
@@ -98,9 +98,9 @@ export default function AgentsPage() {
           {agents.map((agent) => (
             <div
               key={agent.id}
-              className="rounded-xl border border-zinc-800 bg-[#0d0d0d]"
+              className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)]"
             >
-              <div className="flex items-start justify-between border-b border-zinc-800 p-6">
+              <div className="flex items-start justify-between border-b border-[var(--border)] p-6">
                 <div className="flex gap-4">
                   <div className="rounded-lg bg-zinc-900 p-3">
                     <Bot size={20} />
@@ -109,13 +109,13 @@ export default function AgentsPage() {
                   <div>
                     <h2 className="font-medium">{agent.name}</h2>
 
-                    <p className="mt-1 text-sm text-zinc-500">
+                    <p className="mt-1 text-sm text-[var(--text-muted)]">
                       {agent.description || "No description"}
                     </p>
                   </div>
                 </div>
 
-                <span className="rounded-full bg-zinc-900 px-2 py-1 text-[11px] text-zinc-400">
+                <span className="rounded-full bg-zinc-900 px-2 py-1 text-[11px] text-[var(--text-secondary)]">
                   {agent.mode}
                 </span>
               </div>
@@ -131,7 +131,7 @@ export default function AgentsPage() {
                 />
               </div>
 
-              <div className="border-t border-zinc-800 p-6">
+              <div className="border-t border-[var(--border)] p-6">
                 <div className="flex items-center gap-2">
                   <ShieldCheck size={16} />
                   <p className="text-sm font-medium">Capabilities</p>
@@ -142,22 +142,22 @@ export default function AgentsPage() {
                     agent.capabilities.map((capability) => (
                       <span
                         key={capability}
-                        className="rounded-full bg-zinc-900 px-2.5 py-1 text-xs text-zinc-400"
+                        className="rounded-full bg-zinc-900 px-2.5 py-1 text-xs text-[var(--text-secondary)]"
                       >
                         {capability}
                       </span>
                     ))
                   ) : (
-                    <span className="text-xs text-zinc-600">
+                    <span className="text-xs text-[var(--text-dim)]">
                       No capabilities configured
                     </span>
                   )}
                 </div>
               </div>
 
-              <div className="flex gap-2 border-t border-zinc-800 p-6">
+              <div className="flex gap-2 border-t border-[var(--border)] p-6">
                 <Link
-                  href={`/agents/${agent.id}`}
+                  href={`/evaluations?agentId=${agent.id}`}
                   className="flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-black"
                 >
                   <Play size={14} />
@@ -183,7 +183,7 @@ export default function AgentsPage() {
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-zinc-500">{label}</p>
+      <p className="text-xs text-[var(--text-muted)]">{label}</p>
 
       <p className="mt-1 text-sm">{value}</p>
     </div>

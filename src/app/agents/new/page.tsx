@@ -118,13 +118,13 @@ export default function NewAgentPage() {
   return (
     <ProtectedRoute>
 
-    <main className="min-h-screen bg-[#0a0a0a] text-white ml-64 p-8">
+    <main className="min-h-screen bg-[var(--bg-base)] text-white ml-60 p-8">
       <div className="mx-auto max-w-4xl">
-        <p className="text-xs text-zinc-500">AGENTS / NEW</p>
+        <p className="text-xs text-[var(--text-muted)]">AGENTS / NEW</p>
 
         <h1 className="mt-2 text-3xl font-semibold">Create Agent</h1>
 
-        <p className="mt-2 text-sm text-zinc-500">
+        <p className="mt-2 text-sm text-[var(--text-muted)]">
           Configure an AI agent before running reliability tests.
         </p>
 
@@ -135,7 +135,7 @@ export default function NewAgentPage() {
                 className={`flex h-8 w-8 items-center justify-center rounded-full text-xs ${
                   step >= number
                     ? "bg-white text-black"
-                    : "border border-zinc-800 text-zinc-500"
+                    : "border border-[var(--border)] text-[var(--text-muted)]"
                 }`}
               >
                 {step > number ? <Check size={14} /> : number}
@@ -152,7 +152,7 @@ export default function NewAgentPage() {
           ))}
         </div>
 
-        <div className="mt-8 rounded-xl border border-zinc-800 bg-[#0d0d0d] p-6">
+        <div className="mt-8 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
           {step === 1 && (
             <BasicInfo
               name={name}
@@ -176,7 +176,7 @@ export default function NewAgentPage() {
             />
           )}
 
-          <div className="mt-8 flex justify-between border-t border-zinc-800 pt-5">
+          <div className="mt-8 flex justify-between border-t border-[var(--border)] pt-5">
             <button
               onClick={() => {
                 if (step === 1) {
@@ -185,7 +185,7 @@ export default function NewAgentPage() {
                   setStep(step - 1);
                 }
               }}
-              className="rounded-lg border border-zinc-800 px-4 py-2.5 text-sm"
+              className="rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm"
             >
               {step === 1 ? "Cancel" : "Back"}
             </button>
@@ -233,7 +233,7 @@ function BasicInfo({
   return (
     <div>
       <h2 className="text-lg font-medium">Basic Information</h2>
-      <p className="mt-1 text-sm text-zinc-500">
+      <p className="mt-1 text-sm text-[var(--text-muted)]">
         Define what this agent is responsible for.
       </p>
 
@@ -283,7 +283,7 @@ function ModelStep({
   return (
     <div>
       <h2 className="text-lg font-medium">Model</h2>
-      <p className="mt-1 text-sm text-zinc-500">
+      <p className="mt-1 text-sm text-[var(--text-muted)]">
         Select the model powering this agent.
       </p>
 
@@ -295,11 +295,11 @@ function ModelStep({
             className={`rounded-xl border p-5 text-left ${
               model === item
                 ? "border-white bg-zinc-900"
-                : "border-zinc-800 hover:bg-zinc-900"
+                : "border-[var(--border)] hover:bg-zinc-900"
             }`}
           >
             <p className="font-medium">{item}</p>
-            <p className="mt-1 text-xs text-zinc-500">
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
               {item === "Gemini"
                 ? "Recommended for this prototype"
                 : "Connect this provider later"}
@@ -321,7 +321,7 @@ function ToolsStep({
   return (
     <div>
       <h2 className="text-lg font-medium">Tools</h2>
-      <p className="mt-1 text-sm text-zinc-500">
+      <p className="mt-1 text-sm text-[var(--text-muted)]">
         Select the tools available to your agent.
       </p>
 
@@ -334,14 +334,14 @@ function ToolsStep({
               key={tool.id}
               onClick={() => toggleTool(tool)}
               className={`w-full rounded-xl border p-4 text-left ${
-                selected ? "border-white bg-zinc-900" : "border-zinc-800"
+                selected ? "border-white bg-zinc-900" : "border-[var(--border)]"
               }`}
             >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-mono text-sm">{tool.name}</p>
 
-                  <p className="mt-1 text-xs text-zinc-500">
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
                     {tool.description}
                   </p>
                 </div>
@@ -369,7 +369,7 @@ function CapabilitiesStep({
     <div>
       <h2 className="text-lg font-medium">Capabilities</h2>
 
-      <p className="mt-1 text-sm text-zinc-500">
+      <p className="mt-1 text-sm text-[var(--text-muted)]">
         Define what the agent is allowed to do.
       </p>
 
@@ -382,7 +382,7 @@ function CapabilitiesStep({
               key={capability}
               onClick={() => toggleCapability(capability)}
               className={`flex w-full items-center justify-between rounded-xl border p-4 text-left ${
-                selected ? "border-white bg-zinc-900" : "border-zinc-800"
+                selected ? "border-white bg-zinc-900" : "border-[var(--border)]"
               }`}
             >
               <span className="text-sm">{capability}</span>
@@ -406,7 +406,7 @@ function CapabilitiesStep({
               Dangerous capability enabled
             </p>
 
-            <p className="mt-1 text-xs leading-5 text-zinc-400">
+            <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">
               This agent can perform potentially destructive or financial
               actions. These actions will remain mocked during evaluation.
             </p>
@@ -426,7 +426,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-xs text-zinc-500">{label}</label>
+      <label className="mb-2 block text-xs text-[var(--text-muted)]">{label}</label>
       {children}
     </div>
   );
@@ -440,7 +440,7 @@ function RiskBadge({ risk }: { risk: RiskLevel }) {
         ? "bg-orange-950 text-orange-400"
         : risk === "MEDIUM"
           ? "bg-yellow-950 text-yellow-400"
-          : "bg-zinc-900 text-zinc-400";
+          : "bg-zinc-900 text-[var(--text-secondary)]";
 
   return (
     <span className={`rounded-full px-2 py-1 text-[11px] ${style}`}>

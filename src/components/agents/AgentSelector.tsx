@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AgentDocument } from "@/types/database";
 import { auth } from "@/lib/firebase/client";
 import { getUserAgents } from "@/lib/firebase/agents";
@@ -8,11 +8,13 @@ import { getUserAgents } from "@/lib/firebase/agents";
 type Props = {
   value: string;
   onChange: (agent: AgentDocument) => void;
+  preselect?: string;
 };
 
-export default function AgentSelector({ value, onChange }: Props) {
+export default function AgentSelector({ value, onChange, preselect }: Props) {
   const [agents, setAgents] = useState<AgentDocument[]>([]);
   const [loading, setLoading] = useState(true);
+  const calledRef = useRef(false);
 
   useEffect(() => {
     const load = async () => {
@@ -27,8 +29,16 @@ export default function AgentSelector({ value, onChange }: Props) {
         const data = await getUserAgents(user.uid);
         setAgents(data);
 
-        if (!value && data.length) {
-          onChange(data[0]);
+        if (!calledRef.current) {
+          calledRef.current = true;
+          // Prefer preselect, then value, then first agent
+          const target = preselect || value;
+          const match = target ? data.find((a) => a.id === target) : null;
+          if (match) {
+            onChange(match);
+          } else if (data.length > 0 && !value) {
+            onChange(data[0]);
+          }
         }
       } catch (error) {
         console.error("Failed to load agents:", error);
@@ -38,7 +48,8 @@ export default function AgentSelector({ value, onChange }: Props) {
     };
 
     load();
-  }, [value, onChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading) {
     return (
@@ -53,7 +64,6 @@ export default function AgentSelector({ value, onChange }: Props) {
       value={value}
       onChange={(e) => {
         const agent = agents.find((item) => item.id === e.target.value);
-
         if (agent) onChange(agent);
       }}
       className="w-full rounded-lg border border-zinc-800 bg-[#0d0d0d] px-4 py-3 text-sm text-white outline-none focus:border-zinc-600"

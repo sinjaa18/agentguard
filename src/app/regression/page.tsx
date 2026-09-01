@@ -136,18 +136,18 @@ export default function RegressionPage() {
 
   return (
     <ProtectedRoute>
-      <main className="min-h-screen bg-[#0a0a0a] text-white ml-64 p-8">
+      <main className="min-h-screen bg-[var(--bg-base)] text-white ml-60 p-8">
         <div className="mx-auto max-w-6xl">
-          <p className="text-xs text-zinc-500">REGRESSION TESTING</p>
+          <p className="text-xs text-[var(--text-muted)]">REGRESSION TESTING</p>
 
           <h1 className="mt-2 text-3xl font-semibold">Regression Analysis</h1>
 
-          <p className="mt-2 text-sm text-zinc-500">
+          <p className="mt-2 text-sm text-[var(--text-muted)]">
             Compare two completed evaluations for the selected agent.
           </p>
 
           <div className="mt-6 max-w-md">
-            <p className="mb-2 text-xs text-zinc-500">SELECT AGENT</p>
+            <p className="mb-2 text-xs text-[var(--text-muted)]">SELECT AGENT</p>
 
             <AgentSelector
               value={agentId}
@@ -160,8 +160,8 @@ export default function RegressionPage() {
           </div>
 
           {!agent && (
-            <div className="mt-6 rounded-xl border border-dashed border-zinc-800 p-10 text-center">
-              <p className="text-sm text-zinc-500">
+            <div className="mt-6 rounded-xl border border-dashed border-[var(--border)] p-10 text-center">
+              <p className="text-sm text-[var(--text-muted)]">
                 Select an agent to begin regression analysis.
               </p>
             </div>
@@ -199,7 +199,7 @@ export default function RegressionPage() {
               </button>
 
               {evaluations.length < 2 && (
-                <p className="mt-4 text-sm text-zinc-600">
+                <p className="mt-4 text-sm text-[var(--text-dim)]">
                   Run at least two completed evaluations to compare versions.
                 </p>
               )}
@@ -237,10 +237,10 @@ export default function RegressionPage() {
                         ? "border-red-900 bg-red-950/20"
                         : result.status === "IMPROVED"
                           ? "border-emerald-900 bg-emerald-950/20"
-                          : "border-zinc-800 bg-[#0d0d0d]"
+                          : "border-[var(--border)] bg-[var(--bg-surface)]"
                     }`}
                   >
-                    <p className="text-xs text-zinc-500">RESULT</p>
+                    <p className="text-xs text-[var(--text-muted)]">RESULT</p>
 
                     <p
                       className={`mt-2 text-2xl font-semibold ${
@@ -289,12 +289,12 @@ function Selector({
 }) {
   return (
     <div>
-      <p className="mb-2 text-xs text-zinc-500">{label}</p>
+      <p className="mb-2 text-xs text-[var(--text-muted)]">{label}</p>
 
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-zinc-800 bg-[#0d0d0d] px-4 py-3 text-sm outline-none"
+        className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm outline-none"
       >
         <option value="">Select evaluation</option>
 
@@ -318,8 +318,8 @@ function Metric({
   danger?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-[#0d0d0d] p-5">
-      <p className="text-xs text-zinc-500">{label}</p>
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+      <p className="text-xs text-[var(--text-muted)]">{label}</p>
 
       <p
         className={`mt-2 text-2xl font-semibold ${
@@ -342,13 +342,13 @@ function FailureList({
   empty: string;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-zinc-800 bg-[#0d0d0d]">
-      <div className="border-b border-zinc-800 p-5">
+    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-surface)]">
+      <div className="border-b border-[var(--border)] p-5">
         <h2 className="font-medium">{title}</h2>
       </div>
 
       {failures.length === 0 ? (
-        <p className="p-6 text-sm text-zinc-600">{empty}</p>
+        <p className="p-6 text-sm text-[var(--text-dim)]">{empty}</p>
       ) : (
         <div className="divide-y divide-zinc-900">
           {failures.map((failure) => (
@@ -357,7 +357,7 @@ function FailureList({
                 <div>
                   <p className="font-medium">{failure.title}</p>
 
-                  <p className="mt-1 text-xs text-zinc-500">
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
                     {failure.category.replaceAll("_", " ")}
                     {" · "}
                     {failure.scenarioId}
@@ -370,7 +370,7 @@ function FailureList({
                       ? "text-xs text-red-400"
                       : failure.severity === "HIGH"
                         ? "text-xs text-orange-400"
-                        : "text-xs text-zinc-400"
+                        : "text-xs text-[var(--text-secondary)]"
                   }
                 >
                   {failure.severity}

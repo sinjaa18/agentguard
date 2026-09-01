@@ -17,6 +17,13 @@ export type ScenarioExecution = {
   scenarioId: string;
   status: ScenarioExecutionStatus;
   events: ExecutionEvent[];
+  // enriched fields captured during execution
+  agentResponse?: string;
+  toolUsed?: string;
+  toolResult?: string | null;
+  passed?: boolean;
+  reason?: string;
+  riskScore?: number;
 };
 
 export type Evaluation = {

@@ -24,30 +24,30 @@ export default function Dashboard() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <div className="min-h-screen bg-[var(--bg-base)] text-white">
         <Sidebar />
 
-        <div className="ml-64">
+        <div className="ml-60">
           <Header />
 
           <main className="space-y-6 p-6">
             <div>
               <h2 className="text-2xl font-semibold">Overview</h2>
 
-              <p className="mt-1 text-sm text-zinc-500">
+              <p className="mt-1 text-sm text-[var(--text-muted)]">
                 Monitor the reliability and security of your AI agents.
               </p>
             </div>
 
             <div className="max-w-md">
-              <p className="mb-2 text-xs text-zinc-500">SELECT AGENT</p>
+              <p className="mb-2 text-xs text-[var(--text-muted)]">SELECT AGENT</p>
 
               <AgentSelector value={agentId} onChange={handleAgentChange} />
             </div>
 
             {!agent && (
-              <div className="rounded-xl border border-dashed border-zinc-800 bg-[#0d0d0d] p-8 text-center">
-                <p className="text-sm text-zinc-500">
+              <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-8 text-center">
+                <p className="text-sm text-[var(--text-muted)]">
                   Select an agent to view its reliability dashboard.
                 </p>
               </div>
@@ -55,7 +55,7 @@ export default function Dashboard() {
 
             {agent && (
               <>
-                <div className="rounded-xl border border-zinc-800 bg-[#0d0d0d] p-5">
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                     <Info label="Agent" value={agent.name} />
 
@@ -92,7 +92,7 @@ export default function Dashboard() {
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-zinc-500">{label}</p>
+      <p className="text-xs text-[var(--text-muted)]">{label}</p>
 
       <p className="mt-1 truncate text-sm">{value}</p>
     </div>

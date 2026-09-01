@@ -10,4 +10,4 @@ export const gemini = new GoogleGenAI({
   apiKey,
 });
 
-export const GEMINI_MODELS = ["gemini-3.7-flash", "gemini-3.6-flash"] as const;
+export const GEMINI_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash"] as const;

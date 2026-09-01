@@ -58,18 +58,18 @@ export default function TestSuitesPage() {
 
   return (
     <ProtectedRoute>
-      <main className="min-h-screen bg-[#0a0a0a] text-white ml-64 p-8">
+      <main className="min-h-screen bg-[var(--bg-base)] text-white ml-60 p-8">
         <div className="mx-auto max-w-6xl">
-          <p className="text-xs text-zinc-500">TEST SUITE</p>
+          <p className="text-xs text-[var(--text-muted)]">TEST SUITE</p>
 
           <h1 className="mt-2 text-3xl font-semibold">Agent Security Suite</h1>
 
-          <p className="mt-2 text-sm text-zinc-500">
+          <p className="mt-2 text-sm text-[var(--text-muted)]">
             Reliability and security tests for the selected AI agent.
           </p>
 
           <div className="mt-6 max-w-md">
-            <p className="mb-2 text-xs text-zinc-500">SELECT AGENT</p>
+            <p className="mb-2 text-xs text-[var(--text-muted)]">SELECT AGENT</p>
 
             <AgentSelector
               value={agentId}
@@ -81,24 +81,24 @@ export default function TestSuitesPage() {
           </div>
 
           {!agent && (
-            <div className="mt-6 rounded-xl border border-dashed border-zinc-800 bg-[#0d0d0d] p-10 text-center">
-              <p className="text-sm text-zinc-500">
+            <div className="mt-6 rounded-xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-10 text-center">
+              <p className="text-sm text-[var(--text-muted)]">
                 Select an agent to view its test suite.
               </p>
             </div>
           )}
 
           {agent && (
-            <div className="mt-8 rounded-xl border border-zinc-800 bg-[#0d0d0d] p-6">
+            <div className="mt-8 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs text-zinc-500">TOTAL SCENARIOS</p>
+                  <p className="text-xs text-[var(--text-muted)]">TOTAL SCENARIOS</p>
 
                   <p className="mt-1 text-3xl font-semibold">
                     {loading ? "—" : scenarios.length}
                   </p>
 
-                  <p className="mt-1 text-sm text-zinc-500">{agent.name}</p>
+                  <p className="mt-1 text-sm text-[var(--text-muted)]">{agent.name}</p>
                 </div>
 
                 <div className="flex gap-2">
@@ -111,14 +111,14 @@ export default function TestSuitesPage() {
 
                   <Link
                     href="/evaluations"
-                    className="rounded-lg border border-zinc-800 px-4 py-2.5 text-sm"
+                    className="rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm"
                   >
                     Run Failed
                   </Link>
 
                   <Link
                     href="/evaluations"
-                    className="rounded-lg border border-zinc-800 px-4 py-2.5 text-sm"
+                    className="rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm"
                   >
                     Run Critical
                   </Link>
@@ -126,7 +126,7 @@ export default function TestSuitesPage() {
               </div>
 
               {loading ? (
-                <div className="mt-8 p-10 text-center text-sm text-zinc-500">
+                <div className="mt-8 p-10 text-center text-sm text-[var(--text-muted)]">
                   Loading test suite...
                 </div>
               ) : (
@@ -139,15 +139,15 @@ export default function TestSuitesPage() {
                     return (
                       <div
                         key={category}
-                        className="rounded-lg border border-zinc-800 p-4"
+                        className="rounded-lg border border-[var(--border)] p-4"
                       >
-                        <p className="text-xs text-zinc-500">
+                        <p className="text-xs text-[var(--text-muted)]">
                           {category.replaceAll("_", " ")}
                         </p>
 
                         <p className="mt-2 text-2xl font-semibold">{count}</p>
 
-                        <p className="mt-1 text-xs text-zinc-600">scenarios</p>
+                        <p className="mt-1 text-xs text-[var(--text-dim)]">scenarios</p>
                       </div>
                     );
                   })}
@@ -155,8 +155,8 @@ export default function TestSuitesPage() {
               )}
 
               {!loading && scenarios.length === 0 && (
-                <div className="mt-6 rounded-lg border border-dashed border-zinc-800 p-8 text-center">
-                  <p className="text-sm text-zinc-500">
+                <div className="mt-6 rounded-lg border border-dashed border-[var(--border)] p-8 text-center">
+                  <p className="text-sm text-[var(--text-muted)]">
                     No scenarios have been generated for this agent.
                   </p>
 

@@ -1,39 +1,166 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────
+   AGENTGUARD DESIGN SYSTEM
+   Dark, precision-first, infrastructure aesthetic
+   ───────────────────────────────────────────── */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-base:    #050507;
+  --bg-surface: #0c0c10;
+  --bg-raised:  #111116;
+  --bg-overlay: #16161d;
+
+  --border:     #1e1e28;
+  --border-mid: #2a2a38;
+  --border-hi:  #3a3a50;
+
+  --text-primary:   #f0f0f5;
+  --text-secondary: #8888a0;
+  --text-muted:     #4a4a60;
+  --text-dim:       #2e2e40;
+
+  --accent:     #6366f1;   /* indigo — primary accent */
+  --accent-dim: #312e81;
+  --accent-glow: rgba(99,102,241,0.15);
+
+  --green:  #10b981;
+  --green-dim: #064e3b;
+  --red:    #f43f5e;
+  --red-dim: #4c0519;
+  --orange: #f97316;
+  --orange-dim: #431407;
+  --yellow: #eab308;
+  --yellow-dim: #422006;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* Scrollbar */
+* { scrollbar-width: thin; scrollbar-color: var(--border-mid) transparent; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 4px; }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+html { background: var(--bg-base); }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-.input {
-  width: 100%;
-  border: 1px solid rgb(39 39 42);
-  border-radius: .5rem;
-  background: #09090b;
-  padding: .75rem;
-  color: white;
-  outline: none;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: "Geist", -apple-system, "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
-.input:focus {
-  border-color: rgb(82 82 91);
+/* ── Selection ── */
+::selection { background: var(--accent-dim); color: var(--text-primary); }
+
+/* ── Global input base ── */
+.input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+/* ── Subtle noise texture overlay ── */
+.noise::before {
+  content: "";
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none; border-radius: inherit; z-index: 0;
+}
+
+/* ── Animated scan line (evaluation running) ── */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(200%); }
+}
+.scan-active::after {
+  content: "";
+  position: absolute; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  animation: scanline 2s linear infinite;
+  pointer-events: none;
+}
+
+/* ── Pulse dot ── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.pulse { animation: pulse-dot 1.5s ease-in-out infinite; }
+
+/* ── Card ── */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.card-raised {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+/* ── Tag ── */
+.tag {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px; font-weight: 500; letter-spacing: 0.02em;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+/* ── Status badges ── */
+.badge-pass  { background: #052e1680; color: var(--green);  border: 1px solid #064e3b; }
+.badge-fail  { background: #1a030980; color: var(--red);    border: 1px solid var(--red-dim); }
+.badge-warn  { background: #1a140380; color: var(--yellow); border: 1px solid var(--yellow-dim); }
+.badge-info  { background: #0f0e2080; color: var(--accent); border: 1px solid var(--accent-dim); }
+
+/* ── Mono log block ── */
+.log-block {
+  background: #020204;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  font-family: "Geist Mono", "Fira Code", monospace;
+  font-size: 11.5px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  overflow-x: auto;
+}
+
+/* ── Score ring (used in scorecards) ── */
+.score-ring {
+  display: flex; align-items: center; justify-content: center;
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  border: 2px solid var(--border-mid);
+  font-size: 20px; font-weight: 700;
+}
+
+/* ── Glint line on hover ── */
+.glint {
+  position: relative; overflow: hidden;
+}
+.glint::after {
+  content: "";
+  position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+  transition: left 0.4s ease;
+}
+.glint:hover::after { left: 150%; }
+
+/* ── Print styles for report ── */
+@media print {
+  body { background: white; color: black; }
+  aside, header { display: none; }
+  main { margin: 0 !important; padding: 0 !important; }
 }

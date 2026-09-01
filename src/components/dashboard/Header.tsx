@@ -1,43 +1,75 @@
 "use client";
-import { Bell, Search, Play } from "lucide-react";
+
 import Link from "next/link";
+import { Play } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function Header() {
   const { user } = useAuth();
+
   return (
-    <header className="flex h-16 items-center justify-between border-b border-zinc-800 bg-[#0a0a0a] px-6">
-      <div>
-        <h1 className="text-sm font-medium">Overview</h1>
-        <p className="text-xs text-zinc-500">AI agent reliability workspace</p>
+    <header
+      style={{
+        background: "var(--bg-surface)",
+        borderBottom: "1px solid var(--border)",
+        height: 56,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 24px",
+        position: "sticky",
+        top: 0,
+        zIndex: 30,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{
+          width: 6, height: 6, borderRadius: "50%",
+          background: "var(--accent)",
+          boxShadow: "0 0 8px var(--accent)",
+        }} />
+        <span style={{ fontSize: 13, color: "var(--text-secondary)", fontWeight: 400 }}>
+          AI Agent Reliability Workspace
+        </span>
       </div>
 
-      <div className="flex items-center gap-3">
-        <button className="flex items-center gap-2 rounded-lg border border-zinc-800 px-3 py-2 text-sm text-zinc-400 hover:text-white">
-          <Search size={15} />
-          Search
-        </button>
-
-        <button className="rounded-lg border border-zinc-800 p-2 text-zinc-400 hover:text-white">
-          <Bell size={16} />
-        </button>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {user && (
+          <span style={{
+            fontSize: 12,
+            color: "var(--text-muted)",
+            maxWidth: 180,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}>
+            {user.email}
+          </span>
+        )}
 
         <Link
           href="/evaluations"
-          className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-medium text-black"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "6px 14px",
+            borderRadius: 8,
+            background: "var(--accent)",
+            color: "white",
+            fontSize: 12,
+            fontWeight: 600,
+            textDecoration: "none",
+            boxShadow: "0 0 14px var(--accent-glow)",
+            letterSpacing: "0.01em",
+          }}
         >
-          <Play size={14} />
-          Run Demo
+          <Play size={12} strokeWidth={2.5} />
+          Run Evaluation
         </Link>
-        <UserMenu />
-        {user && (
-          <div className="hidden text-right md:block">
-            <p className="text-xs text-zinc-500">Signed in as</p>
 
-            <p className="text-sm">{user.email}</p>
-          </div>
-        )}
+        <UserMenu />
       </div>
     </header>
   );

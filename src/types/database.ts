@@ -55,13 +55,23 @@ export type ExecutionTraceDocument = {
   id: string;
   evaluationId: string;
   agentId: string;
-  ownerId:string;
+  ownerId: string;
   scenarioId: string;
   status: "PASSED" | "FAILED";
   events: {
     time: string;
     message: string;
   }[];
+  // enriched fields
+  userInput?: string;
+  agentResponse?: string;
+  toolUsed?: string | null;
+  toolResult?: string | null;
+  passed?: boolean;
+  reason?: string;
+  riskScore?: number;
+  scenarioCategory?: string;
+  scenarioSeverity?: string;
   createdAt?: unknown;
 };
 

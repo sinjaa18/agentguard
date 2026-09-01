@@ -26,7 +26,7 @@ export default function FirebaseTestPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white p-10">
+    <main className="min-h-screen bg-[var(--bg-base)] text-white p-10">
       <h1 className="text-3xl font-semibold">Firebase Test</h1>
 
       <button
@@ -36,7 +36,7 @@ export default function FirebaseTestPage() {
         Test Firestore
       </button>
 
-      <p className="mt-5 text-zinc-400">{status}</p>
+      <p className="mt-5 text-[var(--text-secondary)]">{status}</p>
     </main>
   );
 }
