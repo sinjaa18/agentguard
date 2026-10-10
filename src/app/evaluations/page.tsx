@@ -1,27 +1,23 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, useCallback, Suspense, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AgentSelector from "@/components/agents/AgentSelector";
 import { getAgentScenarios } from "@/lib/firebase/scenarios";
-import { runDemoEvaluation } from "@/lib/evaluation/mockEngine";
 import { Evaluation } from "@/lib/evaluation/types";
 import { Scenario } from "@/types/scenario";
 import { AgentDocument, EvaluationDocument } from "@/types/database";
-import { auth } from "@/lib/firebase/client";
-import {
-  createEvaluation,
-  createExecutionTrace,
-  createFailure,
-  getAgentEvaluations,
-} from "@/lib/firebase/evaluations";
-import { classifyFailure } from "@/lib/evaluation/classifyFailure";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { getAgentEvaluations } from "@/lib/firebase/evaluations";
+import { BUILTIN_REDTEAM_SUITE } from "@/lib/ai-evaluation/redteamScenarios";
 
 function EvaluationsInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user: signedInUser } = useAuth();
+  const signedInUserId = signedInUser?.uid;
 
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [running, setRunning] = useState(false);
@@ -30,20 +26,20 @@ function EvaluationsInner() {
   const [agentId, setAgentId] = useState(searchParams.get("agentId") ?? "");
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<EvaluationDocument[]>([]);
+  const [suiteId, setSuiteId] = useState<"saved" | "agentguard-redteam-v1">("saved");
+  const [mode, setMode] = useState<"GEMINI" | "DETERMINISTIC">("GEMINI");
+  const [lastRunReport, setLastRunReport] = useState<Record<string, unknown> | null>(null);
+  const requestController = useRef<AbortController | null>(null);
+  const selectedCount = suiteId === "agentguard-redteam-v1" ? BUILTIN_REDTEAM_SUITE.cases.length : scenarios.length;
 
   // Load scenarios + history whenever agent changes
   useEffect(() => {
     if (!agentId) {
-      setScenarios([]);
-      setHistory([]);
-      setEvaluation(null);
       return;
     }
 
     const load = async () => {
-      const user = auth.currentUser;
-
-      if (!user) {
+      if (!signedInUserId) {
         setScenarios([]);
         setHistory([]);
         setEvaluation(null);
@@ -55,8 +51,8 @@ function EvaluationsInner() {
 
       try {
         const [scenarioData, evaluationData] = await Promise.all([
-          getAgentScenarios(agentId, user.uid),
-          getAgentEvaluations(agentId, user.uid),
+          getAgentScenarios(agentId, signedInUserId),
+          getAgentEvaluations(agentId, signedInUserId),
         ]);
 
         setScenarios(
@@ -84,18 +80,25 @@ function EvaluationsInner() {
     };
 
     load();
-  }, [agentId]);
+  }, [agentId, signedInUserId]);
 
   const handleAgentChange = useCallback((selected: AgentDocument) => {
     setAgent(selected);
     setAgentId(selected.id);
+    setScenarios([]);
+    setHistory([]);
     setEvaluation(null);
+    setLastRunReport(null);
   }, []);
 
   const start = async () => {
-    if (!agent || !scenarios.length || running) return;
+    if (running) {
+      requestController.current?.abort();
+      return;
+    }
+    if (!agent || selectedCount === 0) return;
 
-    const user = auth.currentUser;
+    const user = signedInUser;
 
     if (!user) {
       alert("Please sign in first.");
@@ -104,61 +107,48 @@ function EvaluationsInner() {
 
     setRunning(true);
     setEvaluation(null);
+    setLastRunReport(null);
+    const controller = new AbortController();
+    requestController.current = controller;
 
     try {
-      const finalEvaluation = await runDemoEvaluation(
-        agent,
-        scenarios,
-        setEvaluation,
-      );
-
-      const evaluationId = await createEvaluation({
-        agentId: agent.id,
-        ownerId: user.uid,
-        total: finalEvaluation.total,
-        completed: finalEvaluation.completed,
-        passed: finalEvaluation.passed,
-        failed: finalEvaluation.failed,
-        status: finalEvaluation.status,
-      });
-
-      for (let i = 0; i < finalEvaluation.executions.length; i++) {
-        const execution = finalEvaluation.executions[i];
-        const scenario = scenarios[i];
-
-        await createExecutionTrace({
-          evaluationId,
+      const idToken = await user.getIdToken();
+      const response = await fetch("/api/evaluations/run", {
+        method: "POST",
+        signal: controller.signal,
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({
           agentId: agent.id,
-          ownerId: user.uid,
-          scenarioId: scenario.id,
-          status: execution.status === "FAILED" ? "FAILED" : "PASSED",
-          events: execution.events,
-          userInput: scenario.input,
-          agentResponse: execution.agentResponse ?? "",
-          toolUsed: execution.toolUsed ?? null,
-          toolResult: execution.toolResult ?? null,
-          passed: execution.status !== "FAILED",
-          reason: execution.reason ?? "",
-          riskScore: execution.riskScore ?? 0,
-          scenarioCategory: scenario.category,
-          scenarioSeverity: scenario.severity,
-        });
-
-        if (execution.status === "FAILED") {
-          await createFailure(
-            classifyFailure(scenario, evaluationId, agent.id, user.uid, i),
-          );
-        }
-      }
-
-      const updatedHistory = await getAgentEvaluations(agent.id, user.uid);
-      setHistory(updatedHistory);
-
-      console.log("Evaluation saved:", evaluationId);
+          suiteId,
+          scenarioIds: suiteId === "saved" ? scenarios.map((scenario) => scenario.id) : undefined,
+          mode,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Evaluation could not be completed.");
+      const report = data.report as Record<string, unknown>;
+      const runResults = Array.isArray(report.results) ? report.results as Record<string, unknown>[] : [];
+      const executions = runResults.map((item) => {
+        const tools = Array.isArray(item.tools) ? item.tools as Record<string, unknown>[] : [];
+        const selectedTool = tools.find((tool) => typeof tool.name === "string");
+        return {
+          scenarioId: String(item.scenarioId), status: item.passed ? "PASSED" as const : item.status === "UNJUDGEABLE" ? "UNJUDGEABLE" as const : "FAILED" as const,
+          events: Array.isArray(item.events) ? item.events as { time: string; message: string }[] : [],
+          agentResponse: String(item.response ?? ""), toolUsed: selectedTool ? String(selectedTool.name) : undefined,
+          toolResult: JSON.stringify(tools.map((tool) => ({ name: tool.name, status: tool.status, result: tool.result }))),
+          passed: Boolean(item.passed),
+          reason: String((item.judge as Record<string, unknown> | undefined)?.rationale ?? item.errorCategory ?? "No judge result."),
+          riskScore: Number(item.riskScore ?? 0),
+        };
+      });
+      setEvaluation({ id: String(data.evaluationId), total: Number(data.total), completed: Number(data.completed), passed: Number(data.passed), failed: Number(data.failed), unjudgeable: Number(data.unjudgeable ?? 0), status: data.status, executions });
+      setLastRunReport(report);
+      setHistory(await getAgentEvaluations(agent.id, user.uid));
     } catch (error) {
-      console.error("Evaluation failed:", error);
-      alert(error instanceof Error ? error.message : "Evaluation failed.");
+      if (error instanceof DOMException && error.name === "AbortError") alert("The request was cancelled. If the server had started the run, it records the run as cancelled.");
+      else alert(error instanceof Error ? error.message : "Evaluation failed. Check server configuration and try again.");
     } finally {
+      requestController.current = null;
       setRunning(false);
     }
   };
@@ -184,6 +174,28 @@ function EvaluationsInner() {
             />
           </div>
 
+          {agent && (
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <label className="block text-xs text-[var(--text-muted)]">
+                EVALUATION SUITE
+                <select value={suiteId} onChange={(event) => { setSuiteId(event.target.value as typeof suiteId); setEvaluation(null); setLastRunReport(null); }} className="mt-2 block w-full rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-3 text-sm text-white">
+                  <option value="saved">Saved scenarios ({scenarios.length})</option>
+                  <option value="agentguard-redteam-v1">AgentGuard red-team v1 ({BUILTIN_REDTEAM_SUITE.cases.length})</option>
+                </select>
+              </label>
+              <label className="block text-xs text-[var(--text-muted)]">
+                RUNNER MODE
+                <select value={mode} onChange={(event) => setMode(event.target.value as typeof mode)} className="mt-2 block w-full rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-3 text-sm text-white">
+                  <option value="GEMINI">Live Gemini agent simulation + judge</option>
+                  <option value="DETERMINISTIC">Offline synthetic evaluator fixture</option>
+                </select>
+              </label>
+              <p className="md:col-span-2 text-xs text-[var(--text-muted)]">
+                {mode === "GEMINI" ? "Gemini simulates the configured system prompt. Tool calls run only in the mock environment; this does not execute an arbitrary external agent." : "Offline mode uses synthetic responses to check evaluator behavior; it does not run or score the configured agent."}
+              </p>
+            </div>
+          )}
+
           {!agent && (
             <div className="mt-6 rounded-xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-10 text-center">
               <p className="text-sm text-[var(--text-muted)]">
@@ -205,7 +217,7 @@ function EvaluationsInner() {
                   <Info label="Agent" value={agent.name} />
                   <Info label="Model" value={agent.model} />
                   <Info label="Tools" value={String(agent.tools?.length || 0)} />
-                  <Info label="Scenarios" value={String(scenarios.length)} />
+                  <Info label="Scenarios" value={String(selectedCount)} />
                 </div>
               </div>
 
@@ -213,12 +225,12 @@ function EvaluationsInner() {
                 <p className="text-sm text-[var(--text-secondary)]">
                   {loading
                     ? "Loading scenarios..."
-                    : scenarios.length === 0
+                    : selectedCount === 0
                       ? "No scenarios — generate them first."
-                      : `${scenarios.length} scenarios ready.`}
+                      : `${selectedCount} scenarios ready.`}
                 </p>
 
-                {scenarios.length === 0 && !loading && (
+                {suiteId === "saved" && scenarios.length === 0 && !loading && (
                   <Link
                     href="/scenarios"
                     className="rounded-lg border border-zinc-700 px-4 py-2.5 text-sm text-zinc-300 hover:bg-zinc-900"
@@ -229,11 +241,11 @@ function EvaluationsInner() {
 
                 <button
                   onClick={start}
-                  disabled={running || loading || scenarios.length === 0}
-                  className="rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-black disabled:opacity-50"
+                  disabled={!running && (loading || selectedCount === 0)}
+                  className={`rounded-lg px-5 py-2.5 text-sm font-medium disabled:opacity-50 ${running ? "border border-red-900 text-red-300" : "bg-white text-black"}`}
                 >
                   {running
-                    ? "Evaluation Running..."
+                    ? "Cancel Run"
                     : loading
                       ? "Loading..."
                       : scenarios.length === 0
@@ -244,17 +256,25 @@ function EvaluationsInner() {
 
               {evaluation && (
                 <>
+                  <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--border)] p-4 text-sm">
+                    <span>Run <code>{evaluation.id}</code> · {mode === "GEMINI" ? "Live Gemini" : "Synthetic fixture"}</span>
+                    <div className="flex gap-2">
+                      <Link href={`/evaluations/${evaluation.id}`} className="rounded-lg border border-zinc-700 px-3 py-2">Open run details</Link>
+                      {lastRunReport && <button onClick={() => downloadReport(lastRunReport, evaluation.id)} className="rounded-lg border border-zinc-700 px-3 py-2">Export JSON</button>}
+                    </div>
+                  </div>
                   <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
                     <Stat label="Progress" value={`${evaluation.completed}/${evaluation.total}`} />
                     <Stat label="Passed" value={evaluation.passed} />
                     <Stat label="Failed" value={evaluation.failed} />
+                    <Stat label="Unjudgeable" value={evaluation.unjudgeable ?? 0} />
                     <Stat label="Status" value={evaluation.status} />
                   </div>
 
                   <div className="mt-6 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-surface)]">
                     <div className="border-b border-[var(--border)] p-5">
                       <h2 className="font-medium">Execution</h2>
-                      <p className="mt-1 text-xs text-[var(--text-muted)]">Live scenario execution</p>
+                      <p className="mt-1 text-xs text-[var(--text-muted)]">Ordered execution events and evidence</p>
                     </div>
 
                     <div className="divide-y divide-zinc-900">
@@ -337,7 +357,7 @@ function EvaluationsInner() {
                       })}
                     </div>
 
-                    {evaluation.status === "COMPLETED" && (
+                    {(evaluation.status === "COMPLETED" || evaluation.status === "PARTIAL" || evaluation.status === "CANCELLED") && (
                       <div className="flex justify-end gap-3 border-t border-[var(--border)] p-5">
                         <Link
                           href="/failures"
@@ -381,6 +401,7 @@ function EvaluationsInner() {
                     <th className="p-4 text-left">Progress</th>
                     <th className="p-4 text-left">Passed</th>
                     <th className="p-4 text-left">Failed</th>
+                    <th className="p-4 text-left">Unjudgeable</th>
                     <th className="p-4 text-left">Reliability</th>
                     <th className="p-4 text-left">Status</th>
                   </tr>
@@ -396,6 +417,7 @@ function EvaluationsInner() {
                       <td className="p-4">{item.completed}/{item.total}</td>
                       <td className="p-4 text-emerald-400">{item.passed}</td>
                       <td className="p-4 text-red-400">{item.failed}</td>
+                      <td className="p-4 text-amber-300">{item.unjudgeable ?? 0}</td>
                       <td className="p-4 text-zinc-300">
                         {item.total ? `${Math.round((item.passed / item.total) * 100)}%` : "—"}
                       </td>
@@ -448,8 +470,17 @@ function Status({ status }: { status: string }) {
       ? "text-emerald-400"
       : status === "FAILED"
         ? "text-red-400"
-        : status === "RUNNING" || status === "ANALYZING" || status === "TOOL_CALL"
+        : status === "UNJUDGEABLE" || status === "RUNNING" || status === "ANALYZING" || status === "TOOL_CALL" || status === "PARTIAL"
           ? "text-yellow-400"
           : "text-[var(--text-secondary)]";
   return <span className={`text-xs ${color}`}>{status}</span>;
+}
+
+function downloadReport(report: Record<string, unknown>, evaluationId: string) {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2)], { type: "application/json" }));
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `agentguard-${evaluationId}.json`;
+  anchor.click();
+  URL.revokeObjectURL(url);
 }

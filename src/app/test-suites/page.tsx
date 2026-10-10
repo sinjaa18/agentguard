@@ -7,6 +7,7 @@ import AgentSelector from "@/components/agents/AgentSelector";
 import { auth } from "@/lib/firebase/client";
 import { getAgentScenarios } from "@/lib/firebase/scenarios";
 import { AgentDocument, ScenarioDocument } from "@/types/database";
+import GoldenBenchmarkPanel from "@/components/evaluation/GoldenBenchmarkPanel";
 
 const categories = [
   "NORMAL",
@@ -27,19 +28,18 @@ export default function TestSuitesPage() {
 
   useEffect(() => {
     if (!agentId) {
-      setScenarios([]);
       return;
     }
 
     const load = async () => {
+      setScenarios([]);
+      setLoading(true);
       const user = auth.currentUser;
 
       if (!user) {
-        setScenarios([]);
+        setLoading(false);
         return;
       }
-
-      setLoading(true);
 
       try {
         const data = await getAgentScenarios(agentId, user.uid);
@@ -60,6 +60,7 @@ export default function TestSuitesPage() {
     <ProtectedRoute>
       <main className="min-h-screen bg-[var(--bg-base)] text-white ml-60 p-8">
         <div className="mx-auto max-w-6xl">
+          <GoldenBenchmarkPanel />
           <p className="text-xs text-[var(--text-muted)]">TEST SUITE</p>
 
           <h1 className="mt-2 text-3xl font-semibold">Agent Security Suite</h1>

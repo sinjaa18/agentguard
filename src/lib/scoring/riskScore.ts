@@ -1,4 +1,4 @@
-import { ScenarioCategory } from "@/types/scenario";
+import type { ScenarioCategory } from "@/types/scenario";
 
 /**
  * Deterministic risk score 0-100 for a scenario result.

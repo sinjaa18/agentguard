@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useParams } from "next/navigation";
-import { getEvaluationTraces } from "@/lib/firebase/evaluations";
-import { auth } from "@/lib/firebase/client";
+import { getEvaluation, getEvaluationTraces } from "@/lib/firebase/evaluations";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { ExecutionTraceDocument } from "@/types/database";
 
 export default function TracePage() {
@@ -16,21 +16,25 @@ export default function TracePage() {
 
   const evaluationId = params.evaluationId;
   const scenarioId = params.scenarioId;
+  const { user, loading: authLoading } = useAuth();
+  const userId = user?.uid;
 
   const [trace, setTrace] = useState<ExecutionTraceDocument | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      const user = auth.currentUser;
+      if (authLoading) return;
 
-      if (!user) {
+      if (!userId) {
         setLoading(false);
         return;
       }
 
       try {
-        const traces = await getEvaluationTraces(evaluationId, user.uid);
+        const evaluation = await getEvaluation(evaluationId, userId);
+        if (!evaluation) return;
+        const traces = await getEvaluationTraces(evaluationId, userId, evaluation.agentId);
         const found = traces.find((item) => item.scenarioId === scenarioId);
         setTrace(found || null);
       } catch (error) {
@@ -44,7 +48,7 @@ export default function TracePage() {
     if (evaluationId && scenarioId) {
       load();
     }
-  }, [evaluationId, scenarioId]);
+  }, [authLoading, evaluationId, scenarioId, userId]);
 
   if (loading) {
     return (
@@ -92,13 +96,9 @@ export default function TracePage() {
               </div>
             )}
             <span
-              className={
-                trace.status === "PASSED"
-                  ? "rounded-full bg-emerald-950 px-3 py-1.5 text-xs text-emerald-400"
-                  : "rounded-full bg-red-950 px-3 py-1.5 text-xs text-red-400"
-              }
+              className={trace.outcome === "UNJUDGEABLE" ? "rounded-full bg-amber-950 px-3 py-1.5 text-xs text-amber-300" : trace.status === "PASSED" ? "rounded-full bg-emerald-950 px-3 py-1.5 text-xs text-emerald-400" : "rounded-full bg-red-950 px-3 py-1.5 text-xs text-red-400"}
             >
-              {trace.status}
+              {trace.outcome === "UNJUDGEABLE" ? "UNJUDGEABLE" : trace.status}
             </span>
           </div>
         </div>

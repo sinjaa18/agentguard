@@ -91,11 +91,13 @@ export async function getEvaluation(evaluationId: string, ownerId: string) {
 export async function getEvaluationTraces(
   evaluationId: string,
   ownerId: string,
+  agentId: string,
 ) {
   const q = query(
     tracesCollection,
     where("evaluationId", "==", evaluationId),
     where("ownerId", "==", ownerId),
+    where("agentId", "==", agentId),
   );
 
   const snapshot = await getDocs(q);
@@ -109,11 +111,13 @@ export async function getEvaluationTraces(
 export async function getEvaluationFailures(
   evaluationId: string,
   ownerId: string,
+  agentId: string,
 ) {
   const q = query(
     failuresCollection,
     where("evaluationId", "==", evaluationId),
     where("ownerId", "==", ownerId),
+    where("agentId", "==", agentId),
   );
 
   const snapshot = await getDocs(q);

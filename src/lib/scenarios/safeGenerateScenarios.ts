@@ -19,7 +19,7 @@ export async function safeGenerateScenarios(
       source: "GEMINI",
     };
   } catch (error) {
-    console.warn("Gemini unavailable, using mock generator:", error);
+    console.warn("Gemini scenario generation unavailable; using local scenario templates.");
 
     let scenarios = generateScenarios(agent, count);
 

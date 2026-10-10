@@ -23,8 +23,9 @@ export default function LoginPage() {
       if (mode === "login") await loginUser(email, password);
       else await registerUser(email, password);
       router.push("/dashboard");
-    } catch (err: any) {
-      switch (err?.code) {
+    } catch (err: unknown) {
+      const code = err && typeof err === "object" && "code" in err ? err.code : undefined;
+      switch (code) {
         case "auth/invalid-credential": setError("Invalid email or password."); break;
         case "auth/email-already-in-use": setError("Account already exists."); break;
         case "auth/weak-password": setError("Password too weak."); break;

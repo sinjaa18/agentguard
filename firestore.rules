@@ -1,0 +1,63 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function ownsAgent(agentId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/agents/$(agentId)).data.ownerId == request.auth.uid;
+    }
+
+    function ownsEvaluation(evaluationId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/evaluations/$(evaluationId)).data.ownerId == request.auth.uid;
+    }
+
+    match /agents/{agentId} {
+      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow read, delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+      allow update: if signedIn()
+        && resource.data.ownerId == request.auth.uid
+        && request.resource.data.ownerId == resource.data.ownerId;
+    }
+
+    match /scenarios/{scenarioId} {
+      allow create: if signedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && ownsAgent(request.resource.data.agentId);
+      allow read, delete: if signedIn()
+        && resource.data.ownerId == request.auth.uid
+        && ownsAgent(resource.data.agentId);
+      allow update: if signedIn()
+        && resource.data.ownerId == request.auth.uid
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.agentId == resource.data.agentId
+        && ownsAgent(resource.data.agentId);
+    }
+
+    // Evaluation, trace, and finding writes go through the authenticated server route.
+    // Client owners can read historical immutable results; clients cannot rewrite snapshots.
+    match /evaluations/{evaluationId} {
+      allow read: if signedIn() && resource.data.ownerId == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
+    match /executionTraces/{traceId} {
+      allow read: if signedIn()
+        && resource.data.ownerId == request.auth.uid
+        && ownsEvaluation(resource.data.evaluationId)
+        && get(/databases/$(database)/documents/evaluations/$(resource.data.evaluationId)).data.agentId == resource.data.agentId;
+      allow create, update, delete: if false;
+    }
+
+    match /failures/{failureId} {
+      allow read: if signedIn()
+        && resource.data.ownerId == request.auth.uid
+        && ownsEvaluation(resource.data.evaluationId)
+        && get(/databases/$(database)/documents/evaluations/$(resource.data.evaluationId)).data.agentId == resource.data.agentId;
+      allow create, update, delete: if false;
+    }
+  }
+}

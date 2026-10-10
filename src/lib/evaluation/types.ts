@@ -1,4 +1,4 @@
-export type EvaluationStatus = "QUEUED" | "RUNNING" | "COMPLETED";
+export type EvaluationStatus = "QUEUED" | "RUNNING" | "COMPLETED" | "PARTIAL" | "FAILED" | "CANCELLED";
 
 export type ScenarioExecutionStatus =
   | "QUEUED"
@@ -6,7 +6,8 @@ export type ScenarioExecutionStatus =
   | "TOOL_CALL"
   | "ANALYZING"
   | "PASSED"
-  | "FAILED";
+  | "FAILED"
+  | "UNJUDGEABLE";
 
 export type ExecutionEvent = {
   time: string;
@@ -32,6 +33,7 @@ export type Evaluation = {
   completed: number;
   passed: number;
   failed: number;
+  unjudgeable?: number;
   status: EvaluationStatus;
   executions: ScenarioExecution[];
 };

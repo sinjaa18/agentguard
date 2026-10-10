@@ -1,4 +1,5 @@
 import { gemini, GEMINI_MODELS } from "./server";
+import { withSanitizedProviderInput } from "@/lib/ai-evaluation/providerInput";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -11,22 +12,21 @@ export async function generateGemini(
   for (const model of GEMINI_MODELS) {
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
-        console.log(`Gemini ${model} attempt ${attempt}`);
-
-        return await gemini.models.generateContent({
+        const { result } = await withSanitizedProviderInput(contents, (safeContents) => gemini.models.generateContent({
           model,
-          contents,
+          contents: safeContents,
           config: {
             responseMimeType: "application/json",
             responseSchema,
           },
-        });
-      } catch (error: any) {
+        }));
+        return result;
+      } catch (error: unknown) {
         lastError = error;
 
-        const status = error?.status;
+        const status = error && typeof error === "object" && "status" in error ? error.status : undefined;
 
-        console.error(`Gemini ${model} failed:`, status, error?.message);
+        console.warn("Gemini generation attempt failed", { status });
 
         if (status !== 429 && status !== 503) {
           throw error;

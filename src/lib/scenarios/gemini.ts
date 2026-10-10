@@ -1,4 +1,5 @@
 import { Scenario } from "@/types/scenario";
+import { auth } from "@/lib/firebase/client";
 
 type GeminiAgent = {
   name: string;
@@ -30,10 +31,14 @@ export async function generateGeminiScenarios(
   count: number,
   adversarial = false,
 ): Promise<Scenario[]> {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Please sign in before generating scenarios.");
+  const idToken = await user.getIdToken();
   const response = await fetch("/api/scenarios/generate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${idToken}`,
     },
     body: JSON.stringify({
       agentName: agent.name,

@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "AgentGuard",
-  description: "AI Agent Reliability Platform",
+  description: "Evaluate tool-using agent behavior with saved scenarios, mock tools, and evidence-linked traces.",
 };
 
 export default function RootLayout({

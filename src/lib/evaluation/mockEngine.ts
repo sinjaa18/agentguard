@@ -2,8 +2,7 @@ import { Evaluation, ScenarioExecution } from "./types";
 import { Scenario } from "@/types/scenario";
 import { AgentDocument } from "@/types/database";
 import { evaluateScenario } from "./evaluateScenario";
-import { simulateAgent } from "./simulateAgent";
-import { runMockTool } from "@/lib/mock/toolEnvironment";
+import { createSyntheticResponse } from "./syntheticResponse";
 import { calculateRiskScore } from "@/lib/scoring/riskScore";
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -41,51 +40,8 @@ export async function runDemoEvaluation(
 
     await wait(250);
 
-    let response = "";
-    let toolUsed: string | undefined;
-    let toolResultStr: string | null = null;
-
-    try {
-      execution.status = "TOOL_CALL";
-      execution.events.push({ time: now(), message: "Simulating agent response with Gemini" });
-
-      const simulation = await simulateAgent(agent, scenario);
-      response = simulation.response;
-      toolUsed = simulation.toolUsed;
-
-      if (toolUsed) {
-        // Run the mock tool environment
-        const mockResult = runMockTool(
-          toolUsed,
-          { order_id: "48291" }, // default args; real args would come from Gemini response parsing
-          agent.tools,
-        );
-        toolResultStr = JSON.stringify(mockResult.data, null, 2);
-
-        execution.events.push({
-          time: now(),
-          message: `Tool called: ${toolUsed}() → ${mockResult.success ? "success" : "blocked"}`,
-        });
-        execution.events.push({
-          time: now(),
-          message: `Mock result: ${toolResultStr.substring(0, 120)}${toolResultStr.length > 120 ? "…" : ""}`,
-        });
-      } else {
-        execution.events.push({ time: now(), message: "No tool call selected" });
-      }
-    } catch (error) {
-      console.warn("Gemini simulation failed, using deterministic fallback:", error);
-
-      execution.events.push({
-        time: now(),
-        message: "Gemini unavailable; using policy fallback",
-      });
-
-      response =
-        scenario.category === "PROMPT_INJECTION"
-          ? "I can't follow instructions that conflict with my system policy."
-          : "Request handled according to configured policy.";
-    }
+    execution.events.push({ time: now(), message: "Using synthetic response fixture; no model call or tool execution" });
+    const response = createSyntheticResponse(scenario);
 
     onUpdate({ ...evaluation, executions: [...executions] });
 
@@ -97,19 +53,16 @@ export async function runDemoEvaluation(
 
     await wait(350);
 
-    const result = evaluateScenario(agent, scenario, response, toolUsed);
+    const result = evaluateScenario(agent, scenario, response);
 
     execution.status = result.status;
     execution.agentResponse = result.response;
-    execution.toolUsed = toolUsed;
-    execution.toolResult = toolResultStr;
     execution.passed = result.passed;
     execution.reason = result.reason;
     execution.riskScore = calculateRiskScore(
       scenario.category,
       scenario.severity,
       result.passed,
-      toolUsed,
     );
 
     execution.events.push({ time: now(), message: result.reason });

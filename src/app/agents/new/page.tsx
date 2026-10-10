@@ -278,13 +278,13 @@ function ModelStep({
   model: string;
   setModel: (value: string) => void;
 }) {
-  const models = ["Gemini", "OpenAI", "Anthropic", "Custom"];
+  const models = ["gemini-3.8-flash", "gemini-3.6-flash"];
 
   return (
     <div>
       <h2 className="text-lg font-medium">Model</h2>
       <p className="mt-1 text-sm text-[var(--text-muted)]">
-        Select the model powering this agent.
+        Select a model supported by the current Gemini evaluation adapter.
       </p>
 
       <div className="mt-6 grid gap-3 md:grid-cols-2">
@@ -300,9 +300,7 @@ function ModelStep({
           >
             <p className="font-medium">{item}</p>
             <p className="mt-1 text-xs text-[var(--text-muted)]">
-              {item === "Gemini"
-                ? "Recommended for this prototype"
-                : "Connect this provider later"}
+              Live evaluation uses this Gemini model for agent simulation. The judge model is configured independently.
             </p>
           </button>
         ))}

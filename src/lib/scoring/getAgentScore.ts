@@ -19,19 +19,7 @@ export async function getAgentScore(
 
   const latest = evaluations
     .filter((evaluation) => evaluation.status === "COMPLETED")
-    .sort((a, b) => {
-      const aTime =
-        a.createdAt && typeof (a.createdAt as any).toMillis === "function"
-          ? (a.createdAt as any).toMillis()
-          : 0;
-
-      const bTime =
-        b.createdAt && typeof (b.createdAt as any).toMillis === "function"
-          ? (b.createdAt as any).toMillis()
-          : 0;
-
-      return bTime - aTime;
-    })[0];
+    .sort((a, b) => firestoreMillis(b.createdAt) - firestoreMillis(a.createdAt))[0];
 
   if (!latest) {
     return calculateFirestoreScore(0, 0, failures);
@@ -46,4 +34,10 @@ export async function getAgentScore(
     latest.passed,
     evaluationFailures,
   );
+}
+
+function firestoreMillis(value: unknown): number {
+  if (!value || typeof value !== "object" || !("toMillis" in value) || typeof value.toMillis !== "function") return 0;
+  const millis = value.toMillis();
+  return Number.isFinite(millis) ? millis : 0;
 }

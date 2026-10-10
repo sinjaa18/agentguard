@@ -1,3 +1,4 @@
+import "server-only";
 import { GoogleGenAI } from "@google/genai";
 
 const apiKey = process.env.GEMINI_API_KEY;
@@ -10,4 +11,4 @@ export const gemini = new GoogleGenAI({
   apiKey,
 });
 
-export const GEMINI_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash"] as const;
+export const GEMINI_MODELS = ["gemini-3.8-flash", "gemini-3.6-flash"] as const;

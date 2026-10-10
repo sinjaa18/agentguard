@@ -57,7 +57,7 @@ export default function Home() {
           marginBottom: 28,
         }}>
           <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--accent)", display: "inline-block", boxShadow: "0 0 6px var(--accent)" }} />
-          AI Agent Evaluation Engine
+          Agent evaluation workspace
         </div>
 
         {/* Headline */}
@@ -71,7 +71,7 @@ export default function Home() {
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
         }}>
-          Test your AI agents<br />before they go rogue.
+          Evaluate agent behavior<br />before deployment.
         </h1>
 
         {/* Sub */}
@@ -82,8 +82,8 @@ export default function Home() {
           margin: "0 auto 36px",
           lineHeight: 1.7,
         }}>
-          Adversarial scenario generation, sandboxed execution, failure classification,
-          and reliability scoring — CI infrastructure for autonomous agents.
+          Run saved scenarios against a Gemini simulation of an agent prompt. Inspect deterministic
+          tool-policy checks, model-assisted findings, and ordered traces; actions stay in a mock environment.
         </p>
 
         {/* CTA row */}
@@ -140,14 +140,13 @@ export default function Home() {
           marginTop: 48,
         }}>
           {[
-            "Prompt Injection Testing",
-            "Tool Misuse Detection",
-            "Destructive Action Guards",
-            "Hallucination Resistance",
-            "Goal Drift Analysis",
-            "Regression Tracking",
-            "Gemini-Powered Simulation",
-            "Risk Scoring 0–100",
+            "Scenario-based evaluation",
+            "Tool allowlist checks",
+            "Mock-tool execution",
+            "Evidence-linked traces",
+            "Model-assisted judge",
+            "Offline deterministic tests",
+            "Evaluation regression gate",
           ].map(f => (
             <span key={f} style={{
               padding: "4px 10px",
