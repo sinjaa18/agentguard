@@ -13,6 +13,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { getAgentEvaluations } from "@/lib/firebase/evaluations";
 import { BUILTIN_REDTEAM_SUITE } from "@/lib/ai-evaluation/redteamScenarios";
 import { EvaluationResponseError, readEvaluationResponse } from "@/lib/evaluation/evaluationResponse";
+import { MAX_SAVED_SCENARIOS_PER_RUN, reconcileScenarioSelection, updateScenarioSelection } from "@/lib/evaluation/scenarioSelection";
 
 function EvaluationsInner() {
   const router = useRouter();
@@ -23,6 +24,8 @@ function EvaluationsInner() {
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [running, setRunning] = useState(false);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [selectedScenarioIds, setSelectedScenarioIds] = useState<string[]>([]);
+  const [selectionLimitMessage, setSelectionLimitMessage] = useState("");
   const [agent, setAgent] = useState<AgentDocument | null>(null);
   const [agentId, setAgentId] = useState(searchParams.get("agentId") ?? "");
   const [loading, setLoading] = useState(false);
@@ -31,19 +34,26 @@ function EvaluationsInner() {
   const [mode, setMode] = useState<"GEMINI" | "DETERMINISTIC">("GEMINI");
   const [lastRunReport, setLastRunReport] = useState<Record<string, unknown> | null>(null);
   const requestController = useRef<AbortController | null>(null);
-  const selectedCount = suiteId === "agentguard-redteam-v1" ? BUILTIN_REDTEAM_SUITE.cases.length : scenarios.length;
+  const selectedCount = suiteId === "agentguard-redteam-v1" ? BUILTIN_REDTEAM_SUITE.cases.length : selectedScenarioIds.length;
 
   // Load scenarios + history whenever agent changes
   useEffect(() => {
+    let active = true;
     if (!agentId) {
-      return;
+      setScenarios([]);
+      setSelectedScenarioIds([]);
+      setHistory([]);
+      setLoading(false);
+      return () => { active = false; };
     }
 
     const load = async () => {
       if (!signedInUserId) {
         setScenarios([]);
+        setSelectedScenarioIds([]);
         setHistory([]);
         setEvaluation(null);
+        setLoading(false);
         return;
       }
 
@@ -56,8 +66,9 @@ function EvaluationsInner() {
           getAgentEvaluations(agentId, signedInUserId),
         ]);
 
-        setScenarios(
-          scenarioData.map((s) => ({
+        if (!active) return;
+
+        const loadedScenarios = scenarioData.map((s) => ({
             id: s.id,
             title: s.title,
             category: s.category as Scenario["category"],
@@ -67,37 +78,58 @@ function EvaluationsInner() {
             failure: s.failure,
             tools: s.tools || [],
             status: s.status,
-          })),
-        );
+          }));
+        setScenarios(loadedScenarios);
+        const availableIds = loadedScenarios.map((scenario) => scenario.id);
+        setSelectedScenarioIds((current) => reconcileScenarioSelection(current, availableIds));
+        setSelectionLimitMessage("");
 
         setHistory(evaluationData);
       } catch (error) {
+        if (!active) return;
         console.error("Failed to load evaluation data:", error);
         setScenarios([]);
+        setSelectedScenarioIds([]);
         setHistory([]);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
 
     load();
+    return () => { active = false; };
   }, [agentId, signedInUserId]);
 
   const handleAgentChange = useCallback((selected: AgentDocument) => {
     setAgent(selected);
     setAgentId(selected.id);
     setScenarios([]);
+    setSelectedScenarioIds([]);
+    setSelectionLimitMessage("");
     setHistory([]);
     setEvaluation(null);
     setLastRunReport(null);
   }, []);
+
+  const handleScenarioSelection = (scenarioId: string, shouldSelect: boolean) => {
+    const result = updateScenarioSelection(
+      selectedScenarioIds,
+      scenarioId,
+      shouldSelect,
+      scenarios.map((scenario) => scenario.id),
+    );
+    setSelectedScenarioIds(result.selectedIds);
+    setSelectionLimitMessage(result.limitReached
+      ? `An evaluation can include at most ${MAX_SAVED_SCENARIOS_PER_RUN} saved scenarios. Deselect one before choosing another.`
+      : "");
+  };
 
   const start = async () => {
     if (running) {
       requestController.current?.abort();
       return;
     }
-    if (!agent || selectedCount === 0) return;
+    if (!agent || selectedCount === 0 || (suiteId === "saved" && selectedScenarioIds.length > MAX_SAVED_SCENARIOS_PER_RUN)) return;
 
     const user = signedInUser;
 
@@ -123,7 +155,7 @@ function EvaluationsInner() {
           body: JSON.stringify({
             agentId: agent.id,
             suiteId,
-            scenarioIds: suiteId === "saved" ? scenarios.map((scenario) => scenario.id) : undefined,
+            scenarioIds: suiteId === "saved" ? [...selectedScenarioIds] : undefined,
             mode,
           }),
         });
@@ -223,17 +255,69 @@ function EvaluationsInner() {
                   <Info label="Agent" value={agent.name} />
                   <Info label="Model" value={agent.model} />
                   <Info label="Tools" value={String(agent.tools?.length || 0)} />
-                  <Info label="Scenarios" value={String(selectedCount)} />
+                  <Info label="Scenarios" value={suiteId === "saved" ? `${selectedCount} / ${MAX_SAVED_SCENARIOS_PER_RUN} selected` : String(selectedCount)} />
                 </div>
               </div>
+
+              {suiteId === "saved" && (
+                <section className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-5" aria-labelledby="saved-scenarios-heading">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <h2 id="saved-scenarios-heading" className="font-medium">Choose saved scenarios</h2>
+                      <p className="mt-1 text-xs text-[var(--text-muted)]">
+                        Select up to {MAX_SAVED_SCENARIOS_PER_RUN} scenarios per evaluation.
+                      </p>
+                    </div>
+                    <p className="text-sm text-[var(--text-secondary)]" aria-live="polite">
+                      {selectedCount} / {MAX_SAVED_SCENARIOS_PER_RUN} selected
+                    </p>
+                  </div>
+                  {(selectionLimitMessage || selectedScenarioIds.length >= MAX_SAVED_SCENARIOS_PER_RUN) && (
+                    <p role="status" className="mt-3 text-xs text-amber-300">
+                      {selectionLimitMessage || `Limit reached: evaluations accept up to ${MAX_SAVED_SCENARIOS_PER_RUN} saved scenarios. Deselect one to choose another.`}
+                    </p>
+                  )}
+                  {loading ? (
+                    <p className="mt-4 text-sm text-[var(--text-muted)]">Loading saved scenarios...</p>
+                  ) : scenarios.length === 0 ? (
+                    <p className="mt-4 text-sm text-[var(--text-muted)]">No saved scenarios are available for this agent.</p>
+                  ) : (
+                    <div className="mt-4 max-h-96 space-y-2 overflow-y-auto">
+                      {scenarios.map((scenario) => {
+                        const checked = selectedScenarioIds.includes(scenario.id);
+                        const limitReached = selectedScenarioIds.length >= MAX_SAVED_SCENARIOS_PER_RUN;
+                        return (
+                          <label key={scenario.id} className="flex items-start gap-3 rounded-lg border border-[var(--border)] p-3 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              disabled={running || (!checked && limitReached)}
+                              onChange={(event) => handleScenarioSelection(scenario.id, event.target.checked)}
+                              className="mt-0.5 accent-white"
+                            />
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-white">{scenario.title}</span>
+                              <span className="mt-1 block text-xs text-[var(--text-muted)]">
+                                {scenario.category.replaceAll("_", " ")} · {scenario.severity}
+                              </span>
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+              )}
 
               <div className="mt-6 flex items-center justify-between">
                 <p className="text-sm text-[var(--text-secondary)]">
                   {loading
                     ? "Loading scenarios..."
-                    : selectedCount === 0
+                    : suiteId === "saved" && scenarios.length === 0
                       ? "No scenarios — generate them first."
-                      : `${selectedCount} scenarios ready.`}
+                      : suiteId === "saved"
+                        ? `${selectedCount} / ${MAX_SAVED_SCENARIOS_PER_RUN} saved scenarios selected.`
+                        : `${selectedCount} scenarios ready.`}
                 </p>
 
                 {suiteId === "saved" && scenarios.length === 0 && !loading && (
@@ -247,16 +331,18 @@ function EvaluationsInner() {
 
                 <button
                   onClick={start}
-                  disabled={!running && (loading || selectedCount === 0)}
+                  disabled={!running && (loading || selectedCount === 0 || (suiteId === "saved" && (selectedScenarioIds.length === 0 || selectedScenarioIds.length > MAX_SAVED_SCENARIOS_PER_RUN)))}
                   className={`rounded-lg px-5 py-2.5 text-sm font-medium disabled:opacity-50 ${running ? "border border-red-900 text-red-300" : "bg-white text-black"}`}
                 >
                   {running
                     ? "Cancel Run"
                     : loading
                       ? "Loading..."
-                      : scenarios.length === 0
+                      : suiteId === "saved" && scenarios.length === 0
                         ? "No Scenarios"
-                        : "Run Evaluation"}
+                        : suiteId === "saved" && selectedScenarioIds.length === 0
+                          ? "Select Scenarios"
+                          : "Run Evaluation"}
                 </button>
               </div>
 
@@ -284,8 +370,8 @@ function EvaluationsInner() {
                     </div>
 
                     <div className="divide-y divide-zinc-900">
-                      {evaluation.executions.map((execution, idx) => {
-                        const scenario = scenarios[idx];
+                      {evaluation.executions.map((execution) => {
+                        const scenario = scenarios.find((item) => item.id === execution.scenarioId);
                         return (
                           <div key={execution.scenarioId} className="p-5">
                             <div className="flex items-center justify-between">

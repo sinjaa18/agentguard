@@ -4,19 +4,19 @@ import type { DocumentReference } from "firebase-admin/firestore";
 import { z } from "zod";
 import { getAdminAuth, getAdminFirestore, FirebaseAdminSetupError } from "@/lib/firebase/admin";
 import { extractBearerToken, verifyFirebaseIdToken } from "@/lib/firebase/bearerAuth";
-import { EvaluationRunRequestSchema } from "@/lib/firebase/apiRequestSchemas";
+import { EvaluationRunRequestSchema, evaluationRunValidationError } from "@/lib/firebase/apiRequestSchemas";
 import { withOwnedEvaluationResources } from "@/lib/firebase/ownedEvaluationResources";
 import { createEvaluationSnapshot } from "@/lib/ai-evaluation/snapshot";
 import { runEvaluationPipeline } from "@/lib/ai-evaluation/runEvaluation";
 import { RUBRIC_VERSION } from "@/lib/ai-evaluation/contracts";
 import { BUILTIN_REDTEAM_SUITE } from "@/lib/ai-evaluation/redteamScenarios";
 import { redactSensitiveValue } from "@/lib/ai-evaluation/redaction";
+import { MAX_SAVED_SCENARIOS_PER_RUN } from "@/lib/evaluation/scenarioSelection";
 import type { AgentDocument, ScenarioDocument } from "@/types/database";
 import type { ModelProvider } from "@/lib/ai-evaluation/contracts";
 
 export const runtime = "nodejs";
 
-const MAX_RUN_SCENARIOS = 12;
 const MODEL_IDS = ["gemini-3.8-flash", "gemini-3.6-flash"] as const;
 
 const ToolSchema = z.object({
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     }
     catch { return NextResponse.json({ error: "INVALID_REQUEST", message: "The request body must be valid JSON." }, { status: 400 }); }
     const bodyResult = EvaluationRunRequestSchema.safeParse(requestBody);
-    if (!bodyResult.success) return NextResponse.json({ error: "INVALID_REQUEST", message: "Choose a valid agent and evaluation suite." }, { status: 400 });
+    if (!bodyResult.success) return NextResponse.json(evaluationRunValidationError(bodyResult.error), { status: 400 });
     const body = bodyResult.data;
     if (body.scenarioIds && new Set(body.scenarioIds).size !== body.scenarioIds.length) {
       return NextResponse.json({ error: "INVALID_REQUEST", message: "The selected suite contains duplicate scenarios." }, { status: 400 });
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
           scenarios = documents.map((document, index) => ({ id: document.id, agentId: agent.id, ownerId, ...parsed[index].data }) as ScenarioDocument);
         }
 
-        if (scenarios.length > MAX_RUN_SCENARIOS) return NextResponse.json({ error: "SUITE_TOO_LARGE", message: `Select at most ${MAX_RUN_SCENARIOS} scenarios per run.` }, { status: 400 });
+        if (scenarios.length > MAX_SAVED_SCENARIOS_PER_RUN) return NextResponse.json({ error: "SUITE_TOO_LARGE", message: `Select at most ${MAX_SAVED_SCENARIOS_PER_RUN} scenarios per run.` }, { status: 400 });
         const isBuiltIn = body.suiteId === "agentguard-redteam-v1";
         if (!isBuiltIn && (new Set(scenarios.map((scenario) => scenario.suiteId ?? "saved")).size > 1 || new Set(scenarios.map((scenario) => scenario.suiteVersion ?? 1)).size > 1)) {
           return NextResponse.json({ error: "MIXED_SUITES", message: "Choose scenarios from one saved suite." }, { status: 400 });

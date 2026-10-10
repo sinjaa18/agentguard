@@ -1,12 +1,11 @@
 import { z } from "zod";
-
-const MAX_RUN_SCENARIOS = 12;
+import { MAX_SAVED_SCENARIOS_PER_RUN } from "../evaluation/scenarioSelection.ts";
 
 export const EvaluationRunRequestSchema = z.object({
   agentId: z.string().min(1).max(128),
   mode: z.enum(["GEMINI", "DETERMINISTIC"]),
   suiteId: z.enum(["saved", "agentguard-redteam-v1"]),
-  scenarioIds: z.array(z.string().min(1).max(128)).max(MAX_RUN_SCENARIOS).optional(),
+  scenarioIds: z.array(z.string().min(1).max(128)).max(MAX_SAVED_SCENARIOS_PER_RUN).optional(),
 }).strict().superRefine((body, context) => {
   if (body.suiteId === "saved" && (!body.scenarioIds || body.scenarioIds.length === 0)) {
     context.addIssue({ code: "custom", path: ["scenarioIds"], message: "Choose at least one saved scenario." });
@@ -15,6 +14,23 @@ export const EvaluationRunRequestSchema = z.object({
     context.addIssue({ code: "custom", path: ["scenarioIds"], message: "Built-in suite scenarios are fixed." });
   }
 });
+
+export function evaluationRunValidationError(error: z.ZodError): { error: string; message: string } {
+  const scenarioIdsIssue = error.issues.find((issue) => issue.path[0] === "scenarioIds");
+  if (scenarioIdsIssue?.code === "too_big") {
+    return {
+      error: "TOO_MANY_SCENARIOS",
+      message: `Select no more than ${MAX_SAVED_SCENARIOS_PER_RUN} saved scenarios per evaluation.`,
+    };
+  }
+  if (scenarioIdsIssue?.code === "custom" && scenarioIdsIssue.message === "Choose at least one saved scenario.") {
+    return { error: "NO_SCENARIOS_SELECTED", message: "Choose at least one saved scenario to run this evaluation." };
+  }
+  if (scenarioIdsIssue?.code === "custom" && scenarioIdsIssue.message === "Built-in suite scenarios are fixed.") {
+    return { error: "INVALID_SCENARIO_SELECTION", message: "The built-in suite uses its fixed scenario set." };
+  }
+  return { error: "INVALID_REQUEST", message: "Choose a valid agent and evaluation suite." };
+}
 
 export const ScenarioGenerationRequestSchema = z.object({
   agentName: z.string().min(1).max(120), description: z.string().max(1_000).default(""), systemPrompt: z.string().max(8_000).default(""),
