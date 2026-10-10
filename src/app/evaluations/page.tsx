@@ -12,6 +12,7 @@ import { AgentDocument, EvaluationDocument } from "@/types/database";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getAgentEvaluations } from "@/lib/firebase/evaluations";
 import { BUILTIN_REDTEAM_SUITE } from "@/lib/ai-evaluation/redteamScenarios";
+import { EvaluationResponseError, readEvaluationResponse } from "@/lib/evaluation/evaluationResponse";
 
 function EvaluationsInner() {
   const router = useRouter();
@@ -112,21 +113,26 @@ function EvaluationsInner() {
     requestController.current = controller;
 
     try {
-      const idToken = await user.getIdToken();
-      const response = await fetch("/api/evaluations/run", {
-        method: "POST",
-        signal: controller.signal,
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
-        body: JSON.stringify({
-          agentId: agent.id,
-          suiteId,
-          scenarioIds: suiteId === "saved" ? scenarios.map((scenario) => scenario.id) : undefined,
-          mode,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Evaluation could not be completed.");
-      const report = data.report as Record<string, unknown>;
+      let response: Response;
+      try {
+        const idToken = await user.getIdToken();
+        response = await fetch("/api/evaluations/run", {
+          method: "POST",
+          signal: controller.signal,
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({
+            agentId: agent.id,
+            suiteId,
+            scenarioIds: suiteId === "saved" ? scenarios.map((scenario) => scenario.id) : undefined,
+            mode,
+          }),
+        });
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") throw error;
+        throw new EvaluationResponseError("Could not reach the evaluation service. Check your connection and retry.");
+      }
+      const data = await readEvaluationResponse(response);
+      const report = data.report;
       const runResults = Array.isArray(report.results) ? report.results as Record<string, unknown>[] : [];
       const executions = runResults.map((item) => {
         const tools = Array.isArray(item.tools) ? item.tools as Record<string, unknown>[] : [];
@@ -146,7 +152,7 @@ function EvaluationsInner() {
       setHistory(await getAgentEvaluations(agent.id, user.uid));
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") alert("The request was cancelled. If the server had started the run, it records the run as cancelled.");
-      else alert(error instanceof Error ? error.message : "Evaluation failed. Check server configuration and try again.");
+      else alert(error instanceof EvaluationResponseError ? error.message : "Evaluation failed. Check the server configuration and try again.");
     } finally {
       requestController.current = null;
       setRunning(false);
